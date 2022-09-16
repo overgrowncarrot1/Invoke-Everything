@@ -3,6 +3,9 @@ Function Invoke-Backup
 	<# The following script is to be ran if a user is a Backup Operator. Remember you will need to copy system.bak and ntds.dit to your
 	attacker machine, the following script will try and do it for you, but you will need to set up your own smbserver with the following
 	smbserver.py -smb2support share .
+	
+	More information on how to use this script can be found here https://overgrowncarrot1.medium.com/invoke-backup-ps1-3748f7677b2e
+	
 	#>
 
 	[cmdletbinding()] Param(
