@@ -3,6 +3,9 @@ function Mimikatz-Everything
 <# This script helps with running invoke-mimikatz.ps1 by Nishang it will ask questions throughout that will be used as a copy and paste
 
 for someone to be able to run differnet invoke-mimikatz commands the following switches below can be used one at a time
+
+More information on how to use this script can be found here https://overgrowncarrot1.medium.com/mimikatz-everything-ps1-5683c6047db7
+
 #>
 	[cmdletbinding()] Param
 	(
