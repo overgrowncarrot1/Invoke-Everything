@@ -1,4 +1,10 @@
-﻿Write-Host -BackgroundColor black -ForegroundColor green 'Showing Net Adapters, please pick one'
+<# More information on how to use can be found here
+
+https://overgrowncarrot1.medium.com/macchanger-ps1-b8d2a09bd35c
+
+#>
+ 
+ Write-Host -BackgroundColor black -ForegroundColor green 'Showing Net Adapters, please pick one'
 sleep -Seconds 2
 
 Get-NetAdapter
