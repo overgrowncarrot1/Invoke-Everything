@@ -2,6 +2,8 @@
 
 # May need to change location of Impacket, script looks at /home/kali/.local/lib/python3.9/site-packages/impacket/examples/
 
+# Script is used to enumerate AD from the outside, not all questions need answers. At the end you can also type y to run responder, it is up to you to make sure your responder.conf file is correct
+
 echo -e '\E[31;35m' "If Impacket is not within $PATH then you may need to put whole location into script"; tput sgr0
 
 sleep 2 
