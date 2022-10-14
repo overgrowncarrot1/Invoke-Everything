@@ -30,6 +30,10 @@ echo -e '\E[31;40m' "User File if any"; tput sgr0
 
 read USERFILE
 
+echo -e '\E[31;40m' "Running NMAP on certain ports, putting into $DOMAIN.txt"; tput sgr0
+
+nmap -p 139,445,80,8080,8888,88,111,3389,5985,135,53,593,3269,636 -T4 -vv -Pn -n $DOMAINIP > $DOMAIN.txt
+
 echo -e '\E[31;35m' "Finding Kerberoastable accounts if any"; tput sgr0
 
 GetNPUsers.py DOMAIN/ -no-pass -usersfile $USERFILE -dc-ip $DOMAINIP
@@ -74,7 +78,7 @@ smbclient -L \\\\$DOMAINIP\\
 
 sleep 1
 
-echo -e '\E[31;40m' "Kerbrute location ex: (/home/kali/kerbrute/dist/kerbrute_linux_amd64"; tput sgr0
+echo -e '\E[31;40m' "Kerbrute location ex: (/home/kali/kerbrute/dist/kerbrute_linux_amd64)"; tput sgr0
 
 read KERLOC
 
