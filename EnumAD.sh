@@ -3,18 +3,14 @@
 # May need to change location of Impacket if not within PATH
 
 echo -e '\E[31;40m' "Made by OvergrownCarrot1, thanks for using"
-
+echo ""
 echo -e '\E[31;35m' "This script looks at other tools, you need both impacket and crackmapexec downloaded and in $PATH to work correctly"
 sleep 2
-
 echo ""
-
 echo -e '\E[31;35m' "If you do not know all the information below then leave blank, the more information the more enumeration will happen, may need to run multiple times and check the $DOMAINIP.txt file for more information"; tput sgr0
 sleep 2
-
 echo ""
-
-echo -e '\E[31;40m' "Script is not stuck, it is saving everything to a text file, kerbrute may take a very long time depending on wordlist"; tput sgr0
+echo -e '\E[31;40m' "Script is not stuck, it is saving everything to a text file, kerbrute may take a very long time depending on wordlist if using xato-net-10-million-usernames be very patient"; tput sgr0
 sleep 2
 echo ""
 
@@ -38,6 +34,7 @@ if [ $answer = y ] ; then
 	fi
 fi
 
+echo ""
 echo -e '\E[31;40m' "Domain Name"; tput sgr0
 read DOMAIN 
 
@@ -50,7 +47,7 @@ read USER
 echo -e '\E[31;40m' "Password"; tput sgr0
 read PASS
 
-read -p "If you do not have a userfile already would you like to try GetADUsers.py to make a userfile?" answer
+read -p "If you do not have a userfile already would you like to try GetADUsers.py to make a userfile? (y/n):" answer
 if [ $answer = y ] ; then
 	GetADUsers.py -all -dc-ip $DOMAINIP > $DOMAINIP.users.txt
 	echo -e '\E[31;40m' "Saved to $DOMAINIP.users.txt"
@@ -149,7 +146,7 @@ sleep 1
 if grep 389/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "LDAP is open trying ldapdomaindump and ldapsearch"; tput sgr0
-	echo -e '\E[31;35m' "Creating new directory to put any information found into $DOMAINIP.ldap"
+	echo -e '\E[31;35m' "Creating new directory to put any information found into $DOMAINIP.ldap"; tput sgr0
 	mkdir $DOMAINIP.ldap
 	cd $DOMAINIP.ldap
 	ldapdomaindump ldap://$DOMAINIP:389 
@@ -202,10 +199,15 @@ if grep 445/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "Checking if SMB is vulnerable to anything"; tput sgr0
 	nmap -p 445 --script=smb-vuln-* -Pn $DOMAINIP >> $DOMAINIP.txt
-	smbclient -L \\\\$DOMAINIP\\ >> $DOMAINIP.txt
-	smbmap -H $DOMAINIP >> $DOMAINIP.txt
+	smbclient -L \\\\$DOMAINIP\\ 
 	enum4linux $DOMAINIP >> $DOMAINIP.txt
 	enum4linux -u $USER -p PASS -a $DOMAINIP >> $DOMAINIP.txt
+fi
+sleep 1
+
+if grep "CVE:CVE-2017-0143" $DOMAINIP.txt
+then
+	echo -e '\E[31;40m'"Most likley vulnerable to Eternal Blue"
 fi
 sleep 1
 
