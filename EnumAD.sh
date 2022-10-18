@@ -167,6 +167,14 @@ if grep 80/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "Web Server is running, trying some scripts"; tput sgr0
 	nmap $DOMAINIP --script=http-vuln*,http-enum -p 80 -sC -sV -Pn >> $DOMAINIP.txt
+	read -p "Would you like to run a feroxbuster with big.txt, may take a while? (y/n)" answer
+	if [ $answer = y ] ; then
+		feroxbuster -u http://$DOMAINIP -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+	elif [ $answer = n ] ; then
+		echo -e '\E[31;35m' "Continuing Script"
+	else
+		echo -e '\E[31;35m' "Need a y or n"
+	fi
 fi
 sleep 1
 
