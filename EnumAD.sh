@@ -41,7 +41,7 @@ if [ $answer = y ] ; then
 fi
 sleep 1
 
-read -p "Do you need any of the following tools? (feroxbuster(f), impacket(i), crackmapexec(c), all (a), none(n)"
+read -p "Do you need any of the following tools? (feroxbuster(f), impacket(i), crackmapexec(c), all (a), none(n)" answer
 if [ $answer = f ] ; then
 	echo -e '\E[31;40m' "Downloading feroxbuster"
 	sudo apt update
@@ -499,7 +499,7 @@ sleep 1
 
 if grep 3389/tcp $DOMAINIP.txt
 then
-	read -p "RDP is open try and brute force? (knownuser(ku)/knownpassword(kp)/unknown(u)/no(n) ex ku)"
+	read -p "RDP is open try and brute force? (knownuser(ku)/knownpassword(kp)/unknown(u)/no(n) ex ku)" answer
 	if [ $answer = ku ] ; then
 		echo -e '\E[31;40m' "User to test?"; tput sgr0
 		read KNOWNUSER
@@ -529,7 +529,7 @@ sleep 1
 
 read -p "Do you want to run external Bloodhound? (y/n)" answer
 if [ $answer = y ] ; then
-	read -p "Do you have bloodhound-python installed? (y/n)"
+	read -p "Do you have bloodhound-python installed? (y/n)" answer
 	if [ $answer = y ] ; then
 		echo -e '\E[31;40m' "Username?";tput sgr0
 		read BLOODUSER
