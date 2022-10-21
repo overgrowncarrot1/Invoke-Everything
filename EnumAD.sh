@@ -91,13 +91,17 @@ else
 fi
 sleep 1
 
+if grep https://nmap.org $DOMAINIP.txt
+then
+	echo -e '\E[31;40m' "$DOMAINIP.txt already exists, not running NMAP scan"
+else
 echo -e '\E[31;35m' "Running NMAP to see what is open and putting in $DOMAINIP.txt, only looking at certain ports"; tput sgr0
 nmap -p 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,443,2049,1521,3306,1433 -vv -Pn -n -T4 -A $DOMAINIP > $DOMAINIP.txt
 echo -e '\E[31;35m' "Ran NMAP on the following ports 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,443,2049,1521,3306,1433"
 cat $DOMAINIP.txt | grep open > $DOMAINIP.open.txt
 rm -rf $DOMAINIP.txt
 mv $DOMAINIP.open.txt $DOMAINIP.txt
-
+fi
 echo ""
 
 echo -e '\E[31;35m' "Saving everything to $DOMAINIP.txt"; tput sgr0
@@ -161,7 +165,7 @@ then
 	echo "IP may be a domain controller, port 88 is open"
 	read -p "Would you like to try one of the following (kerberoasting(ki)/kerbrute(kb)/all(a)/none(n) ex: ki)?" answer
 	if [ $answer = ki ] ; then
-		GetNPUsers.py DOMAIN/ -no-pass -usersfile $USERFILE -dc-ip $DOMAINIP >> $DOMAINIP.txt
+		GetNPUsers.py $DOMAIN/ -no-pass -usersfile $USERFILE -dc-ip $DOMAINIP >> $DOMAINIP.txt
 	elif [ $answer = kb ] ; then
 		echo -e '\E[31;35m' "Kerbrute location ex: (/home/kali/kerbrute/dist/kerbrute_linux_amd64)"; tput sgr0
 		read KERLOC
@@ -231,7 +235,6 @@ sleep 1
 if grep 80/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "Web Server is running, trying some scripts"; tput sgr0
-	nmap $DOMAINIP --script=http-vuln*,http-enum -p 80 -sC -sV -Pn >> $DOMAINIP.txt
 	read -p "Would you like to run a feroxbuster with big.txt, may take a while? (y/n)" answer
 	if [ $answer = y ] ; then
 		read -p "Do you want to install feroxbuster? (y/n)" answer
@@ -279,7 +282,6 @@ sleep 1
 if grep 8888/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "There may be a web server running on port 8888"; tput sgr0
-	nmap $DOMAINIP --script=http-vuln*,http-enum -p 8888 -sC -sV -Pn >> $DOMAINIP.txt
 	read -p "Would you like to run a feroxbuster with big.txt, may take a while? (y/n)" answer
 	if [ $answer = y ] ; then
 		read -p "Do you want to install feroxbuster? (y/n)" answer
@@ -303,7 +305,6 @@ sleep 1
 if grep 443/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "There may be a web server running on port 443"; tput sgr0
-	nmap $DOMAINIP --script=http-vuln*,http-enum -p 443 -sC -sV -Pn >> $DOMAINIP.txt
 	read -p "Would you like to run sslscan(s), feroxbuster(f), both(b) or none(n)?" answer
 	if [ $answer = s ] ; then
 		echo -e '\E[31;35m' "Running SSLSCAN to view certificates, may take a minute"
