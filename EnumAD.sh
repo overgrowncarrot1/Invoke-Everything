@@ -427,9 +427,10 @@ if [ $answer = y ] ; then
 	wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/PrintNightmareScript.sh > PrintNightmareScript.sh
 	echo -e '\E[31;40m' "Saved script to PrintNightmareScript.sh"
 elif [ $answer = n ] ; then
-	echo -e '\E[31;40m' "Not downloading script"
+	echo -e '\E[31;40m' "Not downloading script"; tput sgr0
 else
-	echo -e '\E[31;40m' "Need a y or n"
+	echo -e '\E[31;40m' "Need a y or n"; tput sgr0
+fi
 sleep 1
 
 read -p "Test for Zero Logon? (y/n)" answer
