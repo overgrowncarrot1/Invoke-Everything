@@ -181,7 +181,7 @@ then
 		echo -e '\E[31;35m' "Kerbrute username file ex: (/usr/share/wordlists/seclists/Usernames/xato-net-10-million-usernames.txt)"; tput sgr0
 		read KERUSER
 		echo -e '\E[31;35m' "Keberos Username Spray"; tput sgr0
-		$KERLOC userenum $KERUSER --dc $DOMAINIP -d $DOMAIN -t 200 >> $DOMAINIP.txt
+		$KERLOC userenum --dc $DOMAINIP -d $DOMAIN -t 200 $KERUSER >> $DOMAINIP.txt
 	elif [ $answer = a ] ; then
 		nmap -p 88 $DOMAINIP --script=krb5-enum-users.nse -Pn -vv
 		GetADUsers.py -all "$DOMAIN/$USER" -dc-ip $DOMAINIP >> $DOMAINIP.txt
