@@ -159,7 +159,8 @@ then
 	if [ $answer = y ] ; then
 		echo "Making $DOMAINIP.ldap directory"
 		mkdir $DOMAINIP.ldap
-		ldapdomaindump -u $USER -p $PASS $DOMAINIP
+		cd $DOMAINIP.ldap
+		ldapdomaindump -u $DOMAIN\\$USER -p $PASS $DOMAINIP
 		cd ..
 		echo "May want to check out $DOMAINIP.ldap directory to see if there is anything useful in there"
 		else
