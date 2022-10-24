@@ -41,7 +41,7 @@ if [ $answer = y ] ; then
 fi
 sleep 1
 
-read -p "Do you need any of the following tools? (feroxbuster(f), impacket(i), crackmapexec(c), all (a), none(n)" answer
+read -p "Do you need any of the following tools? (feroxbuster(f), impacket(i), crackmapexec(c), ldapdomaindump(l) all (a), none(n)" answer
 if [ $answer = f ] ; then
 	echo -e '\E[31;40m' "Downloading feroxbuster"
 	sudo apt update
@@ -59,6 +59,15 @@ elif [ $answer = a ] ; then
 	sudo apt install -y feroxbuster
 	sudo apt install python3-impacket
 	sudo apt install crackmapexec
+	sudo pip install ldapdomaindump
+	sudo pip install ldap3
+	sudo pip install dnspython
+	sudo apt update
+elif [ $answer = l ]; then
+	sudo pip install ldapdomaindump
+	sudo pip install ldap3
+	sudo pip install dnspython
+	sudo apt update
 elif [ $answer = n ] ; then
 	echo -e '\E[31;40m' "Not downloading anything continuing script"
 else
@@ -95,12 +104,20 @@ if grep https://nmap.org $DOMAINIP.txt
 then
 	echo -e '\E[31;40m' "$DOMAINIP.txt already exists, not running NMAP scan"
 else
-echo -e '\E[31;35m' "Running NMAP to see what is open and putting in $DOMAINIP.txt, only looking at certain ports"; tput sgr0
-nmap -p 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,443,2049,1521,3306,1433 -vv -Pn -n -T4 -A $DOMAINIP > $DOMAINIP.txt
-echo -e '\E[31;35m' "Ran NMAP on the following ports 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,443,2049,1521,3306,1433"
-cat $DOMAINIP.txt | grep open > $DOMAINIP.open.txt
-rm -rf $DOMAINIP.txt
-mv $DOMAINIP.open.txt $DOMAINIP.txt
+	read -p "Would you like to run NMAP or RustScan? Nmap(n) / RustScan (r)" answer
+	if [ $answer = n ]; then
+		echo -e '\E[31;35m' "Running NMAP to see what is open and putting in $DOMAINIP.txt, only looking at certain ports"; tput sgr0
+		nmap -p 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,443,2049,1521,3306,1433 -vv -Pn -n -T4 -A $DOMAINIP > $DOMAINIP.txt
+		echo -e '\E[31;35m' "Ran NMAP on the following ports 21,25,139,445,80,8080,8888,111,3389,5985,135,53,593,3269,636,389,88,443,2049,1521,3306,1433"
+		cat $DOMAINIP.txt | grep open > $DOMAINIP.open.txt
+		rm -rf $DOMAINIP.txt
+		mv $DOMAINIP.open.txt $DOMAINIP.txt
+	elif [ $answer = r ]; then
+		echo -e '\E[31;35m' "Running RustScan on all ports"
+		rustscan -t 5000 -a $DOMAINIP --ulimit 5000 -- -Pn > $DOMAINIP.txt
+	else 
+		echo -e '\E[31;35m' "Need an n or r"
+	fi
 fi
 echo ""
 
@@ -140,24 +157,16 @@ if [ $USER ] && [ $PASS ]
 then
 	read -p "Since you provided username and password would like to try ldapdomaindump? (y/n)" answer
 	if [ $answer = y ] ; then
-		read -p "Do you need to install ldapdomaindump? (y/n)" answer
-		if [ $answer = y ] ; then
-			sudo pip install ldapdomaindump
-			sudo pip install ldap3
-			sudo pip install dnspython
-			sudo apt update
-		elif [ $answer = n ] ; then
-			echo "Making $DOMAINIP.ldap directory"
-			mkdir $DOMAINIP.ldap
-			ldapdomaindump -u $USER -p $PASS $DOMAINIP
-			cd ..
-			echo "May want to check out $DOMAINIP.ldap directory to see if there is anything useful in there"
+		echo "Making $DOMAINIP.ldap directory"
+		mkdir $DOMAINIP.ldap
+		ldapdomaindump -u $USER -p $PASS $DOMAINIP
+		cd ..
+		echo "May want to check out $DOMAINIP.ldap directory to see if there is anything useful in there"
 		else
 			echo echo -e '\E[31;35m' "Need a y or n"
-		fi
-	else 
-		echo "Continuing Script"
 	fi
+else 
+		echo "Continuing Script"
 fi
 
 if grep 88/tcp $DOMAINIP.txt
