@@ -1,0 +1,9 @@
+set verbose onX
+set metadata C:\Windows\Temp\meta.cabX
+set context clientaccessibleX
+set context persistentX
+begin backupX
+add volume C: alias cdriveX
+createX
+expose %cdrive% E:X
+end backupX
