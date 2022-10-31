@@ -239,6 +239,7 @@ then
 	echo -e '\E[31;35m' "DNS is running, trying dig and some other stuff"; tput sgr0
 	nmap $DOMAINIP -p 53 -vv -sV -sC -Pn --script=dns-zone-transfer.nse,dns-brute.nse >> $DOMAINIP.txt
 	dig $DOMAIN @$DOMAINIP any >> $DOMAINIP.txt
+	dig -t AXFR $DOMAIN @$DOMAINIP >> $DOMAINIP.txt
 fi
 sleep 1
 
@@ -366,7 +367,9 @@ if grep 445/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "Checking if SMB is vulnerable to anything"; tput sgr0
 	nmap -p 445 --script=smb-vuln-* -Pn $DOMAINIP >> $DOMAINIP.txt
+	echo -e '\E[31;35m' "Seeing if anonymous login works with no password, hit enter on the next part"; tput sgr0
 	smbclient -L \\\\$DOMAINIP\\ 
+	echo -e '\E[31;35m' "Running enum4linux just to make sure, make take a minute"; tput sgr0
 	enum4linux $DOMAINIP >> $DOMAINIP.txt
 	enum4linux -u $USER -p PASS -a $DOMAINIP >> $DOMAINIP.txt
 fi
@@ -432,14 +435,19 @@ sleep 1
 echo -e '\E[31;40m' "Testing if vulnerable to Print Nightmare"; tput sgr0
 impacket-rpcdump @$DOMAINIP | egrep 'MS-RPRN|MS-PAR' >> $DOMAINIP.txt
 impacket-rpcdump @$DOMAIN | egrep 'MS-RPRN|MS-PAR' >> $DOMAINIP.txt
-read -p "If vulnerable would you like to download a PrintNightmare Script made by OvergrownCarrot1? (y/n)" answer
-if [ $answer = y ] ; then
-	wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/PrintNightmareScript.sh > PrintNightmareScript.sh
-	echo -e '\E[31;40m' "Saved script to PrintNightmareScript.sh"
+
+if grep "Print System Remote Protocol" $DOMAINIP.txt
+then
+	read -p "System seems vulnerable to Print Nightmare, exploit? (y/n)" answer
+	read -p "Would you like to download a PrintNightmare Script made by OvergrownCarrot1? (y/n)" answer
+	if [ $answer = y ] ; then
+		wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/PrintNightmareScript.sh 
+		echo -e '\E[31;40m' "Saved script to PrintNightmareScript.sh"
 elif [ $answer = n ] ; then
 	echo -e '\E[31;40m' "Not downloading script"; tput sgr0
 else
 	echo -e '\E[31;40m' "Need a y or n"; tput sgr0
+	fi
 fi
 sleep 1
 
