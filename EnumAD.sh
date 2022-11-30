@@ -210,10 +210,10 @@ then
 	fi
 fi
 
-if grep "CVE:CVE-2009-3103" $DOMAINIP.txt
+if grep "http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-3103" $DOMAINIP.txt
 then
 	echo -e '\E[31;40m'"Most likely vulnerable to MS09-050"
-	read -p "Would you like to automatically exploit Eternal Blue with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
+	read -p "Would you like to automatically exploit MS09-050 with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
 	if [ $answer = y ] ; then
 		echo "LHOST?"
 		read LHOST
