@@ -120,6 +120,7 @@ else
 		cd /usr/bin
 		./systemctl link $TF
 		./systemctl enable --now $TF
+	fi
 fi
 
 if grep LEGEND lin.txt
