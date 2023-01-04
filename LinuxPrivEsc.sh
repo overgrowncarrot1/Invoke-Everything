@@ -63,7 +63,7 @@ else
 		read -p "What file would you like to view (ex: /etc/shadow):" answer
 		LFILE=$answer
 		cd /usr/bin
-		./arp -v -f "$LFILE"
+		./arping -v -f "$LFILE"
 	elif grep "/usr/bin/awk" info.txt; then
 		read -p "What file would you like to view (ex: /etc/shadow):" answer
 		LFILE=$answer 
