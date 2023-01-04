@@ -22,7 +22,7 @@ read LPORT
 echo -e '\E[32;40m' "Before Downloading linpeas looking for easy wins";tput sgr0
 echo "Current user is $i within group $d" > info.txt
 echo "Script last ran on $now" >> info.txt
-echo '\E[31;40m' "Looking at cronjobs";tput sgr0
+echo -e '\E[31;40m' "Looking at cronjobs";tput sgr0
 cat /etc/crontab >> info.txt
 if grep "apt-get" info.txt; then
 	ls -la /etc/apt | grep apt.conf.d
