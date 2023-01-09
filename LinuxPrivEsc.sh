@@ -185,7 +185,7 @@ if [ $answer = n ]; then
 	echo -e '\E[31;40m' "Not looking for files that will allow us to read other files"
 else
 	echo -e '\E[31;40m' "Looking for files that will allow us to read another file (ex: /etc/shadow)"; tput sgr0
-	if egrep 'base|cat|alpine|ascii-xfr|ash|aspell|atobm|awk|bridge|bzip2|cmp|column|comm|csplit|csvtool|cupsfilter|curl|cut|date|debugfs|dialog|diff|dig|dosbox|efax|arp|ar|ed|dd|bc|as'; then
+	if egrep 'base|cat|alpine|ascii-xfr|ash|aspell|atobm|awk|bridge|bzip2|cmp|column|comm|csplit|csvtool|cupsfilter|curl|cut|date|debugfs|dialog|diff|dig|dosbox|efax|arp|ar|ed|dd|bc|as' suid.txt; then
 		if grep -w "/usr/bin/awk" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer 
