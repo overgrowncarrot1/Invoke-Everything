@@ -3,6 +3,7 @@
 #As I do different boxes this will continue to be updated...
 #Many of the exploits came from doing boxes on Proving Grounds Play and Practice
 #Built by OvergrownCarrot1 Thanks for using
+#If there is a problem with one please hit me up on discord and let me know what happened, I know that some do not work as they are supposed to and I have been working on them to make them work appropriately
 
 #Script only looks at /usr/bin, yes you may have to manually exploit something...
 
