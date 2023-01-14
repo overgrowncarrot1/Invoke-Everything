@@ -23,8 +23,8 @@ else
 fi
 
 echo -e '\E[31;40m' "Script is not an end all be all, you may actually need to do some manual enumeration and exploitation"; tput sgr0
-echo -e '\E[32;40m' "Make sure linpeas is in the folder you have your web server on and is called linpeas.sh (ex: python3 -m http.server 8080)";tput sgr0
-echo -e '\E[31;40m' "Segmentation fault or critical error is ok... let the script continue running";tput sgr0
+echo -e '\E[32;40m' "Make sure linpeas is in the folder you have your web server on and is called linpeas.sh (ex: python3 -m http.server 8080)"; tput sgr0
+echo -e '\E[31;40m' "Segmentation fault or critical error is ok... let the script continue running"; tput sgr0
 sleep 2
 echo -e '\E[31;40m' "LHOST"; tput sgr0
 read LHOST
