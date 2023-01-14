@@ -30,10 +30,10 @@ echo -e '\E[31;40m' "LHOST"; tput sgr0
 read LHOST
 echo -e '\E[31;40m' "Web server LPORT"; tput sgr0
 read LPORT
-echo -e '\E[32;40m' "Before Downloading linpeas looking for easy wins";tput sgr0
+echo -e '\E[32;40m' "Before Downloading linpeas looking for easy wins"; tput sgr0
 echo "Current user is $i within group $d" > info.txt
 echo "Script last ran on $now" >> info.txt
-echo -e '\E[31;40m' "Looking at cronjobs and saving in info.txt";tput sgr0
+echo -e '\E[31;40m' "Looking at cronjobs and saving in info.txt"; tput sgr0
 cat /etc/crontab >> info.txt
 cat /etc/crontab
 if grep "apt-get" info.txt; then
