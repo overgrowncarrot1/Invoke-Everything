@@ -17,7 +17,7 @@ echo -e '\E[31;40m' "Script is not stuck, it is saving everything to a text file
 sleep 2
 echo ""
 
-read -p "Lets start off with the important questions NIN? (Not streamer friendly since that is like a thing or something) (y/n)" answer
+read -p "Lets start off with the important questions NIN? (Not streamer friendly since that is like a thing or something) (y/n):" answer
 if [ $answer = y ] ; then
 	read -p "My Homie... what song (closer(c)/perfect(p)/head(he)/hand(ha))?" answer
 	if [ $answer = c ] ; then
@@ -133,7 +133,7 @@ fi
 
 if grep https://nmap.org $DOMAINIP.txt
 then
-	echo -e '\E[31;40m' "$DOMAINIP.txt already exists, not running NMAP scan"
+	echo -e '\E[31;40m' "$DOMAINIP.txt already exists, not running NMAP scan";tput sgr0
 else
 	read -p "Would you like to run NMAP or RustScan? Nmap(n) / RustScan (r)" answer
 	if [ $answer = n ]; then
@@ -153,10 +153,10 @@ else
 		else 
 			echo ""
 		fi
-		echo -e '\E[31;35m' "Running RustScan on all ports"
+		echo -e '\E[31;35m' "Running RustScan on all ports";tput sgr0
 		rustscan -t 5000 -a $DOMAINIP --ulimit 5000 -- -Pn > $DOMAINIP.txt
 	else 
-		echo -e '\E[31;35m' "Need an n or r"
+		echo -e '\E[31;35m' "Need an n or r";tput sgr0
 	fi
 fi
 echo ""
@@ -204,7 +204,7 @@ then
 		cd ..
 		echo "May want to check out $DOMAINIP.ldap directory to see if there is anything useful in there"
 		else
-			echo echo -e '\E[31;35m' "Need a y or n"
+			echo -e '\E[31;35m' "Need a y or n";tput sgr0
 	fi
 else 
 		echo "Continuing Script"
@@ -236,7 +236,7 @@ fi
 
 if grep "CVE:CVE-2017-0143" $DOMAINIP.txt
 then
-	echo -e '\E[31;40m'"Most likley vulnerable to Eternal Blue"
+	echo -e '\E[31;40m'"Most likley vulnerable to Eternal Blue";tput sgr0
 	read -p "Would you like to automatically exploit Eternal Blue with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
 	if [ $answer = y ] ; then
 		echo "LHOST?"
@@ -249,7 +249,7 @@ fi
 
 if grep "http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-3103" $DOMAINIP.txt
 then
-	echo -e '\E[31;40m'"Most likely vulnerable to MS09-050"
+	echo -e '\E[31;40m'"Most likely vulnerable to MS09-050";tput sgr0
 	read -p "Would you like to automatically exploit MS09-050 with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
 	if [ $answer = y ] ; then
 		echo "LHOST?"
@@ -363,9 +363,9 @@ then
 			echo -e '\E[31;35m' "Need a y or n"; tput sgr0
 		fi
 	elif [ $answer = n ] ; then
-		echo -e '\E[31;35m' "Continuing Script"
+		echo -e '\E[31;35m' "Continuing Script";tput sgr0
 	else
-		echo -e '\E[31;35m' "Need a y or n"
+		echo -e '\E[31;35m' "Need a y or n";tput sgr0
 	fi
 fi
 
@@ -385,9 +385,9 @@ then
 			echo -e '\E[31;35m' "Need a y or n"; tput sgr0
 		fi
 	elif [ $answer = n ] ; then
-		echo -e '\E[31;35m' "Continuing Script"
+		echo -e '\E[31;35m' "Continuing Script";tput sgr0
 	else
-		echo -e '\E[31;35m' "Need a y or n"
+		echo -e '\E[31;35m' "Need a y or n";tput sgr0
 	fi
 fi
 
@@ -396,17 +396,17 @@ then
 	echo -e '\E[31;35m' "There may be a web server running on port 443"; tput sgr0
 	read -p "Would you like to run sslscan(s), feroxbuster(f), both(b) or none(n)?" answer
 	if [ $answer = s ] ; then
-		echo -e '\E[31;35m' "Running SSLSCAN to view certificates, may take a minute"
+		echo -e '\E[31;35m' "Running SSLSCAN to view certificates, may take a minute";tput sgr0
 		sslscan --show-certificate $DOMAINIP >> $DOMAINIP.txt
 		sslscan $DOMAINIP >> $DOMAINIP.txt
 	elif [ $answer = f ] ; then
-		echo -e '\E[31;35m' "Running feroxbuster with big.txt"
+		echo -e '\E[31;35m' "Running feroxbuster with big.txt";tput sgr0
 		feroxbuster -u https://$DOMAINIP:443 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
 	elif [ $answer = b ] ; then
-		echo -e '\E[31;35m' "Running SSLSCAN to view certificates, may take a minute"
+		echo -e '\E[31;35m' "Running SSLSCAN to view certificates, may take a minute";tput sgr0
 		sslscan --show-certificate $DOMAINIP >> $DOMAINIP.txt
 		sslscan $DOMAINIP >> $DOMAINIP.txt
-		echo -e '\E[31;35m' "Running feroxbuster with big.txt"
+		echo -e '\E[31;35m' "Running feroxbuster with big.txt";tput sgr0
 		feroxbuster -u https://$DOMAINIP:443 -w /usr/share/wordlists/dirb/big.txt >> $DOMAINIP.txt
 	elif [ $answer = n ] ; then
 		echo -e '\E[31;35m' "Continuing Script"; tput sgr0
@@ -547,7 +547,7 @@ then
 	if [ $answer = ku ] ; then
 		echo -e '\E[31;40m' "User to test?"; tput sgr0
 		read KNOWNUSER
-		echo -e '\E[31;40m' "Password File? ex (/usr/share/wordlists/fasttrack.txt)"
+		echo -e '\E[31;40m' "Password File? ex (/usr/share/wordlists/fasttrack.txt)";tput sgr0
 		read HYDRAPASS
 		hydra -l $KNOWNUSER -P $HYDRAPASS rdp://$DOMAINIP:3389 >> $DOMAINIP.txt
 	elif [ $answer = kp ] ; then
@@ -587,10 +587,10 @@ if [ $answer = y ] ; then
 	wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.sh
 	bash SMB_Killer.share
 else
-	echo -e '\E[31;40m' "Not running SMB Killer"
+	echo -e '\E[31;40m' "Not running SMB Killer";tput sgr0
 fi
 
-read -p "Do you want to open a new tab for responder? (y/n)" answer
+read -p "Do you want to open a new tab for responder? (y/n):" answer
 if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Interface to run responder on ex: (eth1)?"; tput sgr0 
 	read INT
@@ -599,4 +599,3 @@ fi
 
 # if you actually read this, then good job, if you just ran it... shame on you, know what something is doing before you do anything, good thing
 # nothing malicious is happening to your own system!!! READ THE DAMN SCRIPTS ON GITHUB!!!
-
