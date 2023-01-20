@@ -35,6 +35,7 @@ Help()
    echo "x   	Make an xml file to upload."
    echo "r	Make a rtf file to upload."
    echo "a	Make url,scf,hyper and xml."
+   echo "Example bash SMB_Killer.sh -x"
    echo
 }
 
