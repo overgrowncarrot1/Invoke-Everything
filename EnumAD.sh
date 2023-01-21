@@ -40,14 +40,6 @@ fi
 echo -e '\E[31;35m' "Doing an update first to make sure we can find all files"
 sudo apt update
 
-locate kerbrute_linux_amd64
-
-if [ $? -ne 0 ]; then
-	echo "Downloading Kerbrute"
-	pip3 install kerbrute
-else
-	echo "Not downloading Kerbrute"
-
 which enum4linux
 
 if [ $? -ne 0 ]; then
@@ -595,6 +587,8 @@ if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Interface to run responder on ex: (eth1)?"; tput sgr0 
 	read INT
 	terminator --new-tab -e "sudo responder -I $INT -rdwv;bash"
+else
+	""
 fi
 
 # if you actually read this, then good job, if you just ran it... shame on you, know what something is doing before you do anything, good thing
