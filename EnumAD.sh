@@ -583,7 +583,7 @@ read -p "Do you want to run SMB Killer (this is a script that makes .url, .scf, 
 if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Downloading newest version from github";tput sgr0
 	wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.sh
-	bash SMB_Killer.share
+	bash SMB_Killer.sh
 else
 	echo -e '\E[31;40m' "Not running SMB Killer";tput sgr0
 fi
