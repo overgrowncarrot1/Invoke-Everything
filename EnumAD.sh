@@ -85,6 +85,13 @@ else
 	echo "Not downloading crackmapexec"
 fi
 
+read -p "The kerbrute that is needed for this script is kerbrute_linux_amd64 or kerbrute_linux_386, do you need this version downloaded (y/n):"
+if [ $answer = y ] ; then
+	wget https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_linux_amd64
+	wget https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_linux_386
+else
+	echo "Not installing"
+fi
 read -p "Install impacket (Print Nightmare Version by cube0x0?) (y/n):" answer
 if [ $answer = y ] ; then
 	echo -e '\E[31;40m' "Downloading impacket in home directory"
@@ -259,7 +266,6 @@ then
 	if [ $answer = ki ] ; then
 		GetNPUsers.py $DOMAIN/ -no-pass -usersfile $USERFILE -dc-ip $DOMAINIP >> $DOMAINIP.txt
 	elif [ $answer = kb ] ; then
-		echo -e '\E[31;35m' "Kerbrute location ex: (/home/kali/kerbrute/dist/kerbrute_linux_amd64)"; tput sgr0
 		read KERLOC
 		echo -e '\E[31;35m' "Kerbrute username file ex: (/usr/share/wordlists/seclists/Usernames/xato-net-10-million-usernames.txt)"; tput sgr0
 		read KERUSER
@@ -593,3 +599,4 @@ fi
 
 # if you actually read this, then good job, if you just ran it... shame on you, know what something is doing before you do anything, good thing
 # nothing malicious is happening to your own system!!! READ THE DAMN SCRIPTS ON GITHUB!!!
+
