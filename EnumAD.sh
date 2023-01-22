@@ -15,9 +15,14 @@ echo -e '\E[31;35m' "Anything that is needed to be downloaded is downloaded with
 echo ""
 echo -e '\E[31;40m' "Script is not stuck, it is saving everything to a text file, kerbrute may take a very long time depending on wordlist if using xato-net-10-million-usernames be very patient"; tput sgr0
 sleep 2
-echo ""
-echo ""
-echo ""
+
+echo -e '\E[31;40m'"   ____  ____________   ______                         ___    ____ ";
+echo -e '\E[32;40m'"  / __ \/ ____/ ____/  / ____/___  __  ______ ___     /   |  / __ \ ";
+echo -e '\E[33;40m'" / / / / / __/ /      / __/ / __ \/ / / / __ \`__ \   / /| | / / / /";
+echo -e '\E[34;40m'"/ /_/ / /_/ / /___   / /___/ / / / /_/ / / / / / /  / ___ |/ /_/ / ";
+echo -e '\E[35;40m'"\____/\____/\____/  /_____/_/ /_/\__,_/_/ /_/ /_/  /_/  |_/_____/  ";
+echo -e '\E[36;40m'"                                                                   ";
+
 echo -e '\E[31;40m' "Domain Name"; tput sgr0
 read DOMAIN 
 
@@ -163,7 +168,7 @@ elif [ $answer = 1 ] ; then
 elif [ $answer = 2 ] ; then
 	echo -e '\E[31;40m' "Downloading newest version from github";tput sgr0
 	wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.sh
-	echo -e '\E[32;40m' "Script Downloaded, run it with -h for help"
+	echo -e '\E[32;40m' "Script Downloaded, run it with -h for help"; tput sgr0
 elif [ $answer = 3 ]; then
 	if grep 88/tcp $DOMAINIP.txt
 	then
