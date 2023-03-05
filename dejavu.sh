@@ -18,6 +18,7 @@ Help()
    echo "-l     LHOST"
    echo "-p     LPORT"
    echo "-w     WEBSITE"
+   echo "Syntax: ./DejaVu.sh -l <lhost> -p <lport> -w <WEBHOST>"
    echo "ex: ./DejaVu.sh -l 10.10.10.10 -p 4444 -w http://test.com:8080"
 }
 
