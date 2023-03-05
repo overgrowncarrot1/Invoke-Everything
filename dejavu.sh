@@ -15,10 +15,10 @@ echo -e '\E[37;40m'"                                                            
 Help()
 {
    # Display Help
-   echo "l     LHOST"
-   echo "p     LPORT"
-   echo "r     WEBHOST IP"
-   echo "P     RPORT"
+   echo "-l     LHOST"
+   echo "-p     LPORT"
+   echo "-w     WEBSITE"
+   echo "ex: ./DejaVu.sh -l 10.10.10.10 -p 4444 -w http://test.com:8080"
 }
 
 ############################################################
@@ -31,7 +31,7 @@ Help()
 # Process the input options. Add options as needed.        #
 ############################################################
 # Get the options
-while getopts "l:p:r:P:h" option; do
+while getopts "l:p:w:h" option; do
    case $option in
    	h) # display Help
 	    Help
@@ -45,10 +45,38 @@ while getopts "l:p:r:P:h" option; do
    esac
 done
 
+############################################################
+# If no options are passed do the following        		   #
+############################################################
+
 if [ $# -eq 0 ]; then
     >&2 echo -e '\E[31;40m' "No arguments provided"
     >&2 echo -e '\E[33;40m' "Use -h for help"
     >&2 echo -e '\E[32;40m' "Syntax: ./DejaVu.sh -l <lhost> -p <lport> -w <WEBHOST>"
+    >&2 echo -e '\E[37;40m' "Example: ./DejaVu.sh -l 10.10.10.10 -p 4444 -w http://test.com:8080"
+    exit 1
+fi
+
+if [[ $LHOST -eq 0 ]]; then
+	>&2 echo -e '\E[31;40m' "No LHOST"
+	>&2 echo -e '\E[33;40m' "Use -h for help"
+	>&2 echo -e '\E[32;40m' "Syntax: ./DejaVu.sh -l <lhost> -p <lport> -w <WEBHOST>"
+    >&2 echo -e '\E[37;40m' "Example: ./DejaVu.sh -l 10.10.10.10 -p 4444 -w http://test.com:8080"
+    exit 1
+fi
+
+if [[ $LPORT -eq 0 ]]; then
+	>&2 echo -e '\E[31;40m' "No LPORT"
+	>&2 echo -e '\E[33;40m' "Use -h for help"
+	>&2 echo -e '\E[32;40m' "Syntax: ./DejaVu.sh -l <lhost> -p <lport> -w <WEBHOST>"
+    >&2 echo -e '\E[37;40m' "Example: ./DejaVu.sh -l 10.10.10.10 -p 4444 -w http://test.com:8080"
+    exit 1
+fi
+
+if [[ $WEBHOST -eq 0 ]]; then
+	>&2 echo -e '\E[31;40m' "No WEBHOST"
+	>&2 echo -e '\E[33;40m' "Use -h for help"
+	>&2 echo -e '\E[32;40m' "Syntax: ./DejaVu.sh -l <lhost> -p <lport> -w <WEBHOST>"
     >&2 echo -e '\E[37;40m' "Example: ./DejaVu.sh -l 10.10.10.10 -p 4444 -w http://test.com:8080"
     exit 1
 fi
