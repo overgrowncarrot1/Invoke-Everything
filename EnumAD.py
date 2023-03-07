@@ -291,7 +291,7 @@ def zero():
 def ldapdomaindump():
 	if(len(username) == 0) and (len(password) ==0):
 		print("\033[1;31m Trying LDAP Domain Dump with no username and password in folder ldap")
-		sytem("mkdir ldap")
+		system("mkdir ldap")
 		system("ldapdomaindump ldap://"+domainip+":389")
 		system("firefox ldap/domain_*.html")
 	print("\033[1;31m Dumping Domain in folder ldap")
@@ -519,7 +519,7 @@ if args.Download == True:
 	neo4jDownload()
 if args.Zero == True:
 	zero()
-if args.ldapdomaindump == True:
+if args.LDAP == True:
 	ldapdomaindump()
 if args.Crackmapexec == True:
 	crackmapexec()
