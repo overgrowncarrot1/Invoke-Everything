@@ -50,6 +50,9 @@ print("\033[1;36m                                                               
 
 print("\033[1;33m Use -h to see the differnet arguments that can be ran\033[1;39m")
 
+print("\033[1;33m THIS VERSION HAS BEEN DEPRECIATED, THERE IS A V2 FOUND HERE https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/EnumADv2.sh"
+
+
 def scan():
 	ret_code = system("ls "+domainip+"-rustscan.txt")
 	if ret_code == 0:
