@@ -8,6 +8,3 @@ wget https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Prives
 wget https://raw.githubusercontent.com/lucky-luk3/ActiveDirectory/master/PowerView-Dev.ps1
 wget https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Exfiltration/Invoke-Mimikatz.ps1
 wget https://raw.githubusercontent.com/BloodHoundAD/BloodHound/master/Collectors/SharpHound.ps1
-
-chmod +x tools_download.sh
-bash tools_download.sh
