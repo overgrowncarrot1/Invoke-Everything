@@ -48,6 +48,23 @@ if [ $answer == 99 ]; then
 	exit
 fi
 #Tools Download
+$R'Remember the moment
+You know exactly where youre going,
+Cause the next moment,
+Before you know it, time is slowing
+And its frozen still,
+And the window sill looks really nice, right?
+You think twice about your life,
+It probably happens at night,
+Right?
+
+Fight it,
+Take the pain, ignite it,
+Tie a noose around your mind
+Loose enough to breathe fine and tie it
+To a tree. Tell it, "You belong to me.
+This aint a noose, this is a leash.
+And I have news for you: you must obey me.'$RE
 if [ $answer == D ]; then
 	$G"Updating system to make sure all tools can be found"
 	sudo apt update
