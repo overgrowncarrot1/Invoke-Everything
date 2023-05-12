@@ -68,7 +68,7 @@ More information on how to use this script can be found here https://overgrownca
 
 	if ($PTH)
 	{
-		$User = Read-Host -Prompt 'Input Username'
+	$User = Read-Host -Prompt 'Input Username'
       	$Domain = Read-Host -Prompt 'Input Domain Name'
       	$NTLM = Read-Host -Prompt 'Input NT Hash'
         $AttackerIP = Read-Host -Prompt 'Input Attacker IP'
