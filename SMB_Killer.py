@@ -38,6 +38,7 @@ parser.add_argument("-r", "--RHOST", action="store", help="RHOST")
 parser.add_argument("-l", "--LHOST", action="store", help="LHOST")
 parser.add_argument("-i", "--Interface", action="store", help="LPORT")
 parser.add_argument("-a", "--Share", action="store", help="Share Name")
+parser.add_argument("-d", "--Domain", action="store", help="Domain Name")
 parser.add_argument("-U", "--Username", action="store", help="Username")
 parser.add_argument("-P", "--Password", action="store", help="Password")
 parser.add_argument("-u", "--url", action="store_true", help="URL File")
@@ -50,6 +51,7 @@ RHOST = args.RHOST
 LHOST = args.LHOST
 INTERFACE = args.Interface
 SHARE = args.Share
+DOMAIN = args.Domain
 USERNAME = args.Username
 PASSWORD = args.Password
 URL = args.url
