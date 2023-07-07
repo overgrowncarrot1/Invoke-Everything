@@ -21,4 +21,6 @@ wget https://github.com/carlospolop/PEASS-ng/releases/download/20230702-bc7ce3ac
 wget https://github.com/antonioCoco/JuicyPotatoNG/releases/download/v1.1/JuicyPotatoNG.zip
 unzip JuicyPotatoNG.zip
 wget https://github.com/itm4n/PrintSpoofer/releases/download/v1.0/PrintSpoofer64.exe
+ls -la
+
 
