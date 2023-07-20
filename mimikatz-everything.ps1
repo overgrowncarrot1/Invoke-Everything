@@ -50,7 +50,7 @@ More information on how to use this script can be found here https://overgrownca
         [Switch]
         $Silver,
         
-        [Parameter(ParameterSetName="Silver")]
+        [Parameter(ParameterSetName="All")]
         [Switch]
         $all
 
